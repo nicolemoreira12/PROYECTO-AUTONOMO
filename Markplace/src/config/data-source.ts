@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { Usuario } from "./entities/Usuario";
-import { Producto } from "./entities/Producto";
-import { Emprendedor } from "./entities/Emprendedor";
-import { Categoria } from "./entities/Categoria";
-import { CarritoCompra } from "./entities/CarritoCompra";
-import { DetalleCarrito } from "./entities/DetalleCarrito";
-import { Orden } from "./entities/Orden";
-import { DetalleOrden } from "./entities/DetalleOrden";
-import { Pago } from "./entities/Pago";
-import { TarjetaVirtual } from "./entities/TarjetaVirtual";
+import { Usuario } from "../entities/Usuario";
+import { Producto } from "../entities/Producto";
+import { Emprendedor } from "../entities/Emprendedor";
+import { Categoria } from "../entities/Categoria";
+import { CarritoCompra } from "../entities/CarritoCompra";
+import { DetalleCarrito } from "../entities/DetalleCarrito";
+import { Orden } from "../entities/Orden";
+import { DetalleOrden } from "../entities/DetalleOrden";
+import { Pago } from "../entities/Pago";
+import { TarjetaVirtual } from "../entities/TarjetaVirtual";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
