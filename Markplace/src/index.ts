@@ -1,9 +1,11 @@
 import express from "express";
 import { AppDataSource } from "./config/data-source";
 import productoRoutes from "./routes/Producto.routes";
+import categoriaRoutes from "./routes/Categoria.routes";
 
 const app = express();
 app.use(express.json());
+app.use("/categorias", categoriaRoutes);
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {
