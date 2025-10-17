@@ -7,6 +7,12 @@ export class DetalleCarrito {
   @PrimaryGeneratedColumn()
   idDetalleCarrito!: number;
 
+  @Column()
+  idCarrito!: number;
+
+  @Column()
+  idProducto!: number;
+
   @Column("int")
   cantidad!: number;
 

@@ -8,6 +8,7 @@ import ordenRoutes from "./routes/Orden.routes";
 import tarjetaRoutes from "./routes/TarjetaVirtual.routes";
 import transaccionRoutes from "./routes/Transaccion.routes";
 import carritoRoutes from "./routes/CarritoCompra.routes";  
+import detallecarritoRoutes from "./routes/Dellatecarrito.routes";
 
 
 const app = express();
@@ -20,15 +21,12 @@ app.use("/productos", productoRoutes);
 app.use("/tarjetas", tarjetaRoutes);
 app.use("/transacciones", transaccionRoutes);
 app.use("/carrito", carritoRoutes);
+app.use("/detallecarrito", detallecarritoRoutes);
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {
   res.send("✅ Servidor funcionando y conectado a la base de datos");
 });
-
-// Rutas
-app.use("/api/productos", productoRoutes);
-
 
 AppDataSource.initialize()
   .then(() => {

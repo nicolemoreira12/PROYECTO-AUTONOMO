@@ -13,8 +13,7 @@ export class ProductoService {
   }
 
   async create(data: Partial<Producto>) {
-    const nuevo = productoRepo.create(data);
-    return await productoRepo.save(nuevo);
+    return await productoRepo.save(data);
   }
 
   async update(id: number, data: Partial<Producto>) {
