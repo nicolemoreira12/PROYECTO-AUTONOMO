@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Usuario } from "./Usuario";
+import { Transaccion } from "./Transaccion";
 
 @Entity("tarjetavirtual")
 export class TarjetaVirtual {
@@ -25,5 +26,6 @@ export class TarjetaVirtual {
   @Column({ length: 50 })
   estado!: string;
 
-
+  @OneToMany(() => Transaccion, (transaccion) => transaccion.tarjeta)
+  transacciones!: Transaccion[];
 }

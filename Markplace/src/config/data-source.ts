@@ -10,15 +10,16 @@ import { Orden } from "../entities/Orden";
 import { DetalleOrden } from "../entities/DetalleOrden";
 import { Pago } from "../entities/Pago";
 import { TarjetaVirtual } from "../entities/TarjetaVirtual";
+import { Transaccion } from "../entities/Transaccion";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "localhost",
   port: 5432,
-  username: "postgres",   // 🔹 Cambia por tu usuario
-  password: "120994",      // 🔹 Cambia por tu contraseña
-  database: "postgres",  // 🔹 Crea antes esta BD en PostgreSQL
-  synchronize: true,      // 🔹 Para desarrollo (en prod mejor migraciones)
+  username: "postgres",   
+  password: "120994",     
+  database: "postgres",  
+  synchronize: true,      
   logging: true,
   entities: [
     Usuario,
@@ -30,7 +31,8 @@ export const AppDataSource = new DataSource({
     Orden,
     DetalleOrden,
     Pago,
-    TarjetaVirtual
+    TarjetaVirtual,
+    Transaccion
   ],
   subscribers: [],
   migrations: [],
