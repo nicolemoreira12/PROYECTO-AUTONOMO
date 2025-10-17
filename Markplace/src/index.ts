@@ -7,6 +7,8 @@ import emprendedorRoutes from "./routes/Emprendedor.routes";
 import ordenRoutes from "./routes/Orden.routes";
 import tarjetaRoutes from "./routes/TarjetaVirtual.routes";
 import transaccionRoutes from "./routes/Transaccion.routes";
+import carritoRoutes from "./routes/CarritoCompra.routes";  
+
 
 const app = express();
 app.use(express.json());
@@ -17,6 +19,7 @@ app.use("/orden", ordenRoutes);
 app.use("/productos", productoRoutes);
 app.use("/tarjetas", tarjetaRoutes);
 app.use("/transacciones", transaccionRoutes);
+app.use("/carrito", carritoRoutes);
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {

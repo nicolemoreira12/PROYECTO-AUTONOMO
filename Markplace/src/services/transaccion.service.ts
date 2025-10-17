@@ -32,7 +32,7 @@ async create(data: Partial<Transaccion>) {
     tarjeta.saldoDisponible -= Number(data.monto);
   }
 
-  // eliminamos fecha si viene en data para que CreateDateColumn la maneje automáticamente
+
   if ("fecha" in data) delete data.fecha;
 
   // guardamos transacción
