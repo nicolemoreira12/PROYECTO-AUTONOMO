@@ -1,10 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { Usuario } from "./Usuario";
 
-@Entity()
+@Entity("tarjetavirtual")
 export class TarjetaVirtual {
   @PrimaryGeneratedColumn()
   idTarjeta!: number;
+
+  @Column()
+  idUsuario!: number;
+
+  @ManyToOne(() => Usuario, (usuario) => usuario.tarjetas)
+  @JoinColumn({ name: "idUsuario" })
+  usuario!: Usuario;
 
   @Column({ length: 20 })
   numeroTarjeta!: string;
@@ -18,6 +25,5 @@ export class TarjetaVirtual {
   @Column({ length: 50 })
   estado!: string;
 
-  @ManyToOne(() => Usuario, (usuario) => usuario.tarjetas)
-  usuario!: Usuario;
+
 }

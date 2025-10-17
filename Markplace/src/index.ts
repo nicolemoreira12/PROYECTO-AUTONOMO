@@ -5,7 +5,7 @@ import categoriaRoutes from "./routes/Categoria.routes";
 import usuarioRoutes from "./routes/Usuario.routes";
 import emprendedorRoutes from "./routes/Emprendedor.routes";
 import ordenRoutes from "./routes/Orden.routes";
-
+import tarjetaRoutes from "./routes/TarjetaVirtual.routes";
 const app = express();
 app.use(express.json());
 app.use("/categorias", categoriaRoutes);
@@ -13,6 +13,7 @@ app.use("/usuarios", usuarioRoutes);
 app.use("/emprendedores", emprendedorRoutes);
 app.use("/orden", ordenRoutes);
 app.use("/productos", productoRoutes);
+app.use("/tarjetas", tarjetaRoutes);
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {
