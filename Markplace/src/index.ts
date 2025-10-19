@@ -9,6 +9,7 @@ import tarjetaRoutes from "./routes/TarjetaVirtual.routes";
 import transaccionRoutes from "./routes/Transaccion.routes";
 import carritoRoutes from "./routes/CarritoCompra.routes";  
 import detallecarritoRoutes from "./routes/Dellatecarrito.routes";
+import reportesRoutes from "./routes/Reportes.routes";
 
 
 const app = express();
@@ -22,6 +23,7 @@ app.use("/tarjetas", tarjetaRoutes);
 app.use("/transacciones", transaccionRoutes);
 app.use("/carrito", carritoRoutes);
 app.use("/detallecarrito", detallecarritoRoutes);
+app.use("/api/reportes", reportesRoutes);
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {
