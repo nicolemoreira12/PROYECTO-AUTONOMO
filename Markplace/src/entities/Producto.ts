@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "ty
 import { Emprendedor } from "./Emprendedor";
 import { Categoria } from "./Categoria";
 import { DetalleOrden } from "./DetalleOrden";
+import { DetalleCarrito } from "./DetalleCarrito";
 
 @Entity()
 export class Producto {
@@ -31,5 +32,9 @@ export class Producto {
 
   @OneToMany(() => DetalleOrden, (detalle) => detalle.producto)
   detalles!: DetalleOrden[];
+
+  @OneToMany(() => DetalleCarrito, (detalleCarrito) => detalleCarrito.producto)
+  carritosDetalle!: DetalleCarrito[];
 }
+
 
