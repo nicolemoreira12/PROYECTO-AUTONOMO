@@ -9,7 +9,16 @@ export class DetalleCarritoService {
   }
 
   async getById(id: number) {
-    return await detalleRepo.findOne({ where: { idDetalleCarrito: id }, relations: ["carrito", "producto"] });
+    const detalle = await detalleRepo.findOne({ 
+      where: { idDetalleCarrito: id }, 
+      relations: ["carrito", "producto"] 
+    });
+    
+    if (!detalle) {
+      throw new Error("Detalle de carrito no encontrado");
+    }
+    
+    return detalle;
   }
 
   async create(data: Partial<DetalleCarrito>) {
@@ -18,11 +27,23 @@ export class DetalleCarritoService {
   }
 
   async update(id: number, data: Partial<DetalleCarrito>) {
-    await detalleRepo.update(id, data);
-    return await this.getById(id);
+    const detalle = await detalleRepo.findOneBy({ idDetalleCarrito: id });
+    
+    if (!detalle) {
+      throw new Error("Detalle de carrito no encontrado");
+    }
+    
+    detalleRepo.merge(detalle, data);
+    return await detalleRepo.save(detalle);
   }
 
   async delete(id: number) {
-    return await detalleRepo.delete(id);
+    const result = await detalleRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Detalle de carrito no encontrado");
+    }
+    
+    return result;
   }
 }

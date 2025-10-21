@@ -9,10 +9,16 @@ export class EmprendedorService {
   }
 
   async getById(id: number) {
-    return await emprendedorRepo.findOne({
+    const emprendedor = await emprendedorRepo.findOne({
       where: { idEmprendedor: id },
       relations: ["productos"],
     });
+    
+    if (!emprendedor) {
+      throw new Error("Emprendedor no encontrado");
+    }
+    
+    return emprendedor;
   }
 
   async create(data: Partial<Emprendedor>) {
@@ -21,11 +27,23 @@ export class EmprendedorService {
   }
 
   async update(id: number, data: Partial<Emprendedor>) {
-    await emprendedorRepo.update(id, data);
-    return await this.getById(id);
+    const emprendedor = await emprendedorRepo.findOneBy({ idEmprendedor: id });
+    
+    if (!emprendedor) {
+      throw new Error("Emprendedor no encontrado");
+    }
+    
+    emprendedorRepo.merge(emprendedor, data);
+    return await emprendedorRepo.save(emprendedor);
   }
 
   async delete(id: number) {
-    return await emprendedorRepo.delete(id);
+    const result = await emprendedorRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Emprendedor no encontrado");
+    }
+    
+    return result;
   }
 }

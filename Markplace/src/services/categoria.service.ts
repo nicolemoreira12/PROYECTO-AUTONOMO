@@ -9,7 +9,16 @@ export class CategoriaService {
   }
 
   async getById(id: number) {
-    return await categoriaRepo.findOne({ where: { idCategoria: id }, relations: ["productos"] });
+    const categoria = await categoriaRepo.findOne({ 
+      where: { idCategoria: id }, 
+      relations: ["productos"] 
+    });
+    
+    if (!categoria) {
+      throw new Error("Categoría no encontrada");
+    }
+    
+    return categoria;
   }
 
   async create(data: Partial<Categoria>) {
@@ -18,11 +27,23 @@ export class CategoriaService {
   }
 
   async update(id: number, data: Partial<Categoria>) {
-    await categoriaRepo.update(id, data);
-    return await this.getById(id);
+    const categoria = await categoriaRepo.findOneBy({ idCategoria: id });
+    
+    if (!categoria) {
+      throw new Error("Categoría no encontrada");
+    }
+    
+    categoriaRepo.merge(categoria, data);
+    return await categoriaRepo.save(categoria);
   }
 
   async delete(id: number) {
-    return await categoriaRepo.delete(id);
+    const result = await categoriaRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Categoría no encontrada");
+    }
+    
+    return result;
   }
 }

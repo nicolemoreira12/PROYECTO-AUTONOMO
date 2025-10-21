@@ -9,19 +9,41 @@ export class ProductoService {
   }
 
   async getById(id: number) {
-    return await productoRepo.findOne({ where: { idProducto: id }, relations: ["emprendedor", "categoria"] });
+    const producto = await productoRepo.findOne({ 
+      where: { idProducto: id }, 
+      relations: ["emprendedor", "categoria"] 
+    });
+    
+    if (!producto) {
+      throw new Error("Producto no encontrado");
+    }
+    
+    return producto;
   }
 
   async create(data: Partial<Producto>) {
-    return await productoRepo.save(data);
+    const nuevo = productoRepo.create(data);
+    return await productoRepo.save(nuevo);
   }
 
   async update(id: number, data: Partial<Producto>) {
-    await productoRepo.update(id, data);
-    return await this.getById(id);
+    const producto = await productoRepo.findOneBy({ idProducto: id });
+    
+    if (!producto) {
+      throw new Error("Producto no encontrado");
+    }
+    
+    productoRepo.merge(producto, data);
+    return await productoRepo.save(producto);
   }
 
   async delete(id: number) {
-    return await productoRepo.delete(id);
+    const result = await productoRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Producto no encontrado");
+    }
+    
+    return result;
   }
 }

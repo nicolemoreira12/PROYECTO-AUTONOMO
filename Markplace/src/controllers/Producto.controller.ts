@@ -1,15 +1,13 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
-import { Producto } from "../entities/Producto";
+import { ProductoService } from "../services/Producto.service";
 
-const productoRepo = AppDataSource.getRepository(Producto);
+const productoService = new ProductoService();
 
 // Crear producto
 export const crearProducto = async (req: Request, res: Response) => {
   try {
-    const producto = productoRepo.create(req.body);
-    const result = await productoRepo.save(producto);
-    res.status(201).json(result);
+    const producto = await productoService.create(req.body);
+    res.status(201).json(producto);
   } catch (error) {
     res.status(400).json({ message: "Error al crear producto", error });
   }
@@ -18,7 +16,7 @@ export const crearProducto = async (req: Request, res: Response) => {
 // Listar todos
 export const listarProductos = async (_req: Request, res: Response) => {
   try {
-    const productos = await productoRepo.find({ relations: ["emprendedor", "categoria"] });
+    const productos = await productoService.getAll();
     res.json(productos);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener productos", error });
@@ -28,38 +26,29 @@ export const listarProductos = async (_req: Request, res: Response) => {
 // Obtener por ID
 export const obtenerProducto = async (req: Request, res: Response) => {
   try {
-    const producto = await productoRepo.findOne({
-      where: { idProducto: parseInt(req.params.id) },
-      relations: ["emprendedor", "categoria"],
-    });
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
+    const producto = await productoService.getById(parseInt(req.params.id));
     res.json(producto);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener producto", error });
+    res.status(404).json({ message: error instanceof Error ? error.message : "Producto no encontrado" });
   }
 };
 
 // Actualizar
 export const actualizarProducto = async (req: Request, res: Response) => {
   try {
-    const producto = await productoRepo.findOneBy({ idProducto: parseInt(req.params.id) });
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
-
-    productoRepo.merge(producto, req.body);
-    const result = await productoRepo.save(producto);
-    res.json(result);
+    const producto = await productoService.update(parseInt(req.params.id), req.body);
+    res.json(producto);
   } catch (error) {
-    res.status(400).json({ message: "Error al actualizar producto", error });
+    res.status(400).json({ message: error instanceof Error ? error.message : "Error al actualizar producto" });
   }
 };
 
 // Eliminar
 export const eliminarProducto = async (req: Request, res: Response) => {
   try {
-    const result = await productoRepo.delete(req.params.id);
-    if (result.affected === 0) return res.status(404).json({ message: "Producto no encontrado" });
+    await productoService.delete(parseInt(req.params.id));
     res.json({ message: "Producto eliminado correctamente" });
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar producto", error });
+    res.status(404).json({ message: error instanceof Error ? error.message : "Error al eliminar producto" });
   }
 };

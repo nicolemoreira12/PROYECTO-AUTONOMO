@@ -7,11 +7,18 @@ export class OrdenService {
   async getAll() {
     return await ordenRepo.find({ relations: ["usuario", "detalles", "detalles.producto"] });
   }
+  
   async getById(id: number) {
-    return await ordenRepo.findOne({
+    const orden = await ordenRepo.findOne({
         where: { idOrden: id },
         relations: ["usuario", "detalles", "detalles.producto"],
     });
+    
+    if (!orden) {
+      throw new Error("Orden no encontrada");
+    }
+    
+    return orden;
   }
 
   async create(data: Partial<Orden>) {
@@ -20,10 +27,23 @@ export class OrdenService {
   } 
 
   async update(id: number, data: Partial<Orden>) {
-    await ordenRepo.update(id, data);
-    return await this.getById(id);
+    const orden = await ordenRepo.findOneBy({ idOrden: id });
+    
+    if (!orden) {
+      throw new Error("Orden no encontrada");
+    }
+    
+    ordenRepo.merge(orden, data);
+    return await ordenRepo.save(orden);
   } 
-    async delete(id: number) {
-    return await ordenRepo.delete(id);
+  
+  async delete(id: number) {
+    const result = await ordenRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Orden no encontrada");
+    }
+    
+    return result;
   } 
 }

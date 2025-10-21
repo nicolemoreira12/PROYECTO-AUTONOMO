@@ -9,7 +9,13 @@ export class UsuarioService {
   }
 
   async getById(id: number) {
-    return await usuarioRepo.findOne({ where: { idUsuario: id } });
+    const usuario = await usuarioRepo.findOne({ where: { idUsuario: id } });
+    
+    if (!usuario) {
+      throw new Error("Usuario no encontrado");
+    }
+    
+    return usuario;
   }
 
   async create(data: Partial<Usuario>) {
@@ -18,11 +24,23 @@ export class UsuarioService {
   }
 
   async update(id: number, data: Partial<Usuario>) {
-    await usuarioRepo.update(id, data);
-    return await this.getById(id);
+    const usuario = await usuarioRepo.findOneBy({ idUsuario: id });
+    
+    if (!usuario) {
+      throw new Error("Usuario no encontrado");
+    }
+    
+    usuarioRepo.merge(usuario, data);
+    return await usuarioRepo.save(usuario);
   }
 
   async delete(id: number) {
-    return await usuarioRepo.delete(id);
+    const result = await usuarioRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Usuario no encontrado");
+    }
+    
+    return result;
   }
 }

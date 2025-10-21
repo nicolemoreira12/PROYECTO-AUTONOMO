@@ -9,7 +9,16 @@ export class CarritoService {
   }
 
   async getById(id: number) {
-    return await carritoRepo.findOne({ where: { idCarrito: id }, relations: ["usuario", "detalles", "detalles.producto"] });
+    const carrito = await carritoRepo.findOne({ 
+      where: { idCarrito: id }, 
+      relations: ["usuario", "detalles", "detalles.producto"] 
+    });
+    
+    if (!carrito) {
+      throw new Error("Carrito no encontrado");
+    }
+    
+    return carrito;
   }
 
   async create(data: Partial<CarritoCompra>) {
@@ -18,11 +27,23 @@ export class CarritoService {
   }
 
   async update(id: number, data: Partial<CarritoCompra>) {
-    await carritoRepo.update(id, data);
-    return await this.getById(id);
+    const carrito = await carritoRepo.findOneBy({ idCarrito: id });
+    
+    if (!carrito) {
+      throw new Error("Carrito no encontrado");
+    }
+    
+    carritoRepo.merge(carrito, data);
+    return await carritoRepo.save(carrito);
   }
 
   async delete(id: number) {
-    return await carritoRepo.delete(id);
+    const result = await carritoRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Carrito no encontrado");
+    }
+    
+    return result;
   }
 }

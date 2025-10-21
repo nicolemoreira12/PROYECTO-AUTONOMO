@@ -9,7 +9,16 @@ export class TarjetaVirtualService {
   }
 
   async getById(id: number) {
-    return await tarjetaRepo.findOne({ where: { idTarjeta: id }, relations: ["usuario"] });
+    const tarjeta = await tarjetaRepo.findOne({ 
+      where: { idTarjeta: id }, 
+      relations: ["usuario"] 
+    });
+    
+    if (!tarjeta) {
+      throw new Error("Tarjeta no encontrada");
+    }
+    
+    return tarjeta;
   }
 
   async create(data: Partial<TarjetaVirtual>) {
@@ -18,11 +27,23 @@ export class TarjetaVirtualService {
   }
 
   async update(id: number, data: Partial<TarjetaVirtual>) {
-    await tarjetaRepo.update(id, data);
-    return await this.getById(id);
+    const tarjeta = await tarjetaRepo.findOneBy({ idTarjeta: id });
+    
+    if (!tarjeta) {
+      throw new Error("Tarjeta no encontrada");
+    }
+    
+    tarjetaRepo.merge(tarjeta, data);
+    return await tarjetaRepo.save(tarjeta);
   }
 
   async delete(id: number) {
-    return await tarjetaRepo.delete(id);
+    const result = await tarjetaRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new Error("Tarjeta no encontrada");
+    }
+    
+    return result;
   }
 }
