@@ -10,10 +10,24 @@ import tarjetaRoutes from "./routes/TarjetaVirtual.routes";
 import transaccionRoutes from "./routes/Transaccion.routes";
 import carritoRoutes from "./routes/CarritoCompra.routes";  
 import detallecarritoRoutes from "./routes/Dellatecarrito.routes";
+import reportesRoutes from "./routes/Reportes.routes";
 
 
 const app = express();
 app.use(express.json());
+<<<<<<< HEAD
+=======
+app.use("/categorias", categoriaRoutes);
+app.use("/usuarios", usuarioRoutes);
+app.use("/emprendedores", emprendedorRoutes);
+app.use("/orden", ordenRoutes);
+app.use("/productos", productoRoutes);
+app.use("/tarjetas", tarjetaRoutes);
+app.use("/transacciones", transaccionRoutes);
+app.use("/carrito", carritoRoutes);
+app.use("/detallecarrito", detallecarritoRoutes);
+app.use("/api/reportes", reportesRoutes);
+>>>>>>> 9d804519a484c883c261ba1a68b386edc246e777
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {

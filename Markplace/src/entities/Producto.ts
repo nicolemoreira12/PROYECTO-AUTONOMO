@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
 import { Emprendedor } from "./Emprendedor";
 import { Categoria } from "./Categoria";
+import { DetalleOrden } from "./DetalleOrden";
+import { DetalleCarrito } from "./DetalleCarrito";
 
 @Entity()
 export class Producto {
@@ -27,5 +29,12 @@ export class Producto {
 
   @ManyToOne(() => Categoria, (categoria) => categoria.productos, { eager: true })
   categoria!: Categoria;
+
+  @OneToMany(() => DetalleOrden, (detalle) => detalle.producto)
+  detalles!: DetalleOrden[];
+
+  @OneToMany(() => DetalleCarrito, (detalleCarrito) => detalleCarrito.producto)
+  carritosDetalle!: DetalleCarrito[];
 }
+
 

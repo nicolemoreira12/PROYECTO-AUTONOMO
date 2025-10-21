@@ -1,0 +1,317 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Reportes API",
+  "dateExported": "2024-10-19",
+  "version": "1.1",
+  "folders": [
+    {
+      "name": "Dashboard",
+      "requests": [
+        {
+          "name": "Metricas Generales",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/metricas",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Dashboard Completo",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/dashboard",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "requests": [
+        {
+          "name": "Top 10 Mas Vendidos",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/productos/mas-vendidos?limite=10",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Top 5 Mas Vendidos 2024",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/productos/mas-vendidos?limite=5&fechaInicio=2024-01-01&fechaFin=2024-12-31",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Top 10 Mas Rentables",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/productos/mas-rentables?limite=10",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Estadisticas Producto ID 1",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/productos/1/estadisticas",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias y Emprendedores",
+      "requests": [
+        {
+          "name": "Estadisticas por Categoria",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/categorias/estadisticas",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Estadisticas por Emprendedor",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/emprendedores/estadisticas",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Inventario",
+      "requests": [
+        {
+          "name": "Reporte Inventario - Pagina 1",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/inventario?pagina=1&limite=20",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Inventario - Stock Bajo",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/inventario?estado=Stock Bajo",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Inventario - Agotados",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/inventario?estado=Agotado",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Resumen de Inventario",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/inventario/resumen",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Ordenes",
+      "requests": [
+        {
+          "name": "Todas las Ordenes",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/ordenes?pagina=1&limite=20",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Ordenes Completadas 2024",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/ordenes?estado=Completado&fechaInicio=2024-01-01&fechaFin=2024-12-31",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Ordenes En Proceso",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/ordenes?estado=En Proceso",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "requests": [
+        {
+          "name": "Estadisticas Usuario ID 1",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/usuarios/1/estadisticas",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Top 10 Compradores",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/usuarios/top-compradores?limite=10",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Top 5 Compradores 2024",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/usuarios/top-compradores?limite=5&fechaInicio=2024-01-01&fechaFin=2024-12-31",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Ingresos y Tendencias",
+      "requests": [
+        {
+          "name": "Ingresos Mensuales 2024",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/ingresos?fechaInicio=2024-01-01&fechaFin=2024-12-31&agrupacion=mes",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Ingresos Diarios Octubre",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/ingresos?fechaInicio=2024-10-01&fechaFin=2024-10-31&agrupacion=dia",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Tendencias Diarias Ultimo Mes",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/tendencias?fechaInicio=2024-09-19&fechaFin=2024-10-19&periodo=dia",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Comparar Semestres 2024",
+          "method": "POST",
+          "url": "http://localhost:3000/api/reportes/comparar-periodos",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "raw": "{\n  \"fechaInicio1\": \"2024-01-01\",\n  \"fechaFin1\": \"2024-06-30\",\n  \"fechaInicio2\": \"2024-07-01\",\n  \"fechaFin2\": \"2024-12-31\"\n}"
+          },
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Analisis Avanzados",
+      "requests": [
+        {
+          "name": "Abandono de Carrito",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/abandono-carrito",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Precios por Categoria",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/precios-categoria",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Proyeccion Ventas (3 meses)",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/proyeccion-ventas?meses=3",
+          "headers": [],
+          "body": {},
+          "tests": []
+        },
+        {
+          "name": "Proyeccion Ventas (6 meses)",
+          "method": "GET",
+          "url": "http://localhost:3000/api/reportes/proyeccion-ventas?meses=6",
+          "headers": [],
+          "body": {},
+          "tests": []
+        }
+      ]
+    },
+    {
+      "name": "Exportacion",
+      "requests": [
+        {
+          "name": "Exportar Dashboard",
+          "method": "POST",
+          "url": "http://localhost:3000/api/reportes/exportar",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "raw": "{\n  \"tipoReporte\": \"dashboard\",\n  \"parametros\": {}\n}"
+          },
+          "tests": []
+        },
+        {
+          "name": "Exportar Productos Vendidos",
+          "method": "POST",
+          "url": "http://localhost:3000/api/reportes/exportar",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "raw": "{\n  \"tipoReporte\": \"productos-vendidos\",\n  \"parametros\": {\n    \"limite\": 10\n  }\n}"
+          },
+          "tests": []
+        },
+        {
+          "name": "Exportar Inventario",
+          "method": "POST",
+          "url": "http://localhost:3000/api/reportes/exportar",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "raw": "{\n  \"tipoReporte\": \"inventario\",\n  \"parametros\": {\n    \"pagina\": 1,\n    \"limite\": 50\n  }\n}"
+          },
+          "tests": []
+        }
+      ]
+    }
+  ]
+}
