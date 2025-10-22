@@ -1,6 +1,7 @@
 import express from "express";
 import { AppDataSource } from "./config/data-source";
 import { errorHandler } from "./middlewares/error.middleware";
+import authRoutes from "./routes/Auth.routes";
 import productoRoutes from "./routes/Producto.routes";
 import categoriaRoutes from "./routes/Categoria.routes";
 import usuarioRoutes from "./routes/Usuario.routes";
@@ -24,6 +25,7 @@ app.get("/", (_req, res) => {
 });
 
 // Rutas API
+app.use("/api/auth", authRoutes);  // ← Autenticación (Login y Registro)
 app.use("/api/categorias", categoriaRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/emprendedores", emprendedorRoutes);

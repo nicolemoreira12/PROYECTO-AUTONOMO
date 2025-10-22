@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authMiddleware } from "../middlewares/auth.middleware";
 import {
   crearProducto,
   listarProductos,
@@ -9,10 +10,13 @@ import {
 
 const router = Router();
 
-router.post("/", crearProducto);       // Crear
+// Rutas públicas (sin autenticación)
 router.get("/", listarProductos);      // Listar todos
 router.get("/:id", obtenerProducto);   // Obtener uno
-router.put("/:id", actualizarProducto); // Actualizar
-router.delete("/:id", eliminarProducto); // Eliminar
+
+// Rutas protegidas (requieren autenticación)
+router.post("/", authMiddleware, crearProducto);       // Crear (solo autenticados)
+router.put("/:id", authMiddleware, actualizarProducto); // Actualizar (solo autenticados)
+router.delete("/:id", authMiddleware, eliminarProducto); // Eliminar (solo autenticados)
 
 export default router;
