@@ -1,82 +1,340 @@
-# -*- coding: utf-8 -*-
+
+import os
 import asyncio
 import websockets
 import json
 import traceback
 from config import supabase
 
-connected_clients = set()
+clientes_conectados = set()
+# Último id conocido para el poller realtime
+last_seen_id = 0
+# Nombre de la columna PK a usar en el poller (se detecta al arrancar)
+pk_column = None
 
-async def handler(websocket):
-    # Nuevo cliente conectado
-    print(f"Cliente conectado: {websocket.remote_address}")
-    connected_clients.add(websocket)
+
+def sanear_mensaje(raw):
+    
     try:
-        async for message in websocket:
-            print(f"Mensaje recibido de {websocket.remote_address}: {message}")
+        raw = raw.replace("\x00", "")
+    except Exception:
+        raw = str(raw)
+    # Postman a veces incluye un prefijo como '(Text):\r\n' o '(Binary):\r\n' — eliminarlo
+    if isinstance(raw, str) and raw.startswith('(Text):'):
+        # quitar hasta la primera nueva línea
+        idx = raw.find('\r\n')
+        if idx == -1:
+            idx = raw.find('\n')
+        if idx != -1:
+            raw = raw[idx+2:]
+        else:
+            # si no hay newline, quitar el prefijo simple
+            raw = raw[len('(Text):'):]
+    if isinstance(raw, str) and raw.startswith('(Binary):'):
+        idx = raw.find('\r\n')
+        if idx == -1:
+            idx = raw.find('\n')
+        if idx != -1:
+            raw = raw[idx+2:]
+        else:
+            raw = raw[len('(Binary):'):]
+    if raw and raw[0] == '\ufeff':
+        raw = raw.lstrip('\ufeff')
+    return raw.strip()
+
+
+def intentar_reparar_json(raw):
+    
+    if not raw or not isinstance(raw, str):
+        return None, None
+
+    cand = raw.strip()
+
+    # Si el mensaje viene sin la llave inicial pero contiene "action" u otras claves
+    if not cand.startswith('{') and ('"action"' in cand or "'action'" in cand):
+        cand2 = '{' + cand
+        if not cand2.endswith('}'):
+            cand2 = cand2 + '}'
+        try:
+            obj = json.loads(cand2)
+            return cand2, obj
+        except Exception:
+            pass
+
+    # Equilibrar llaves si faltan cierres
+    opens = cand.count('{')
+    closes = cand.count('}')
+    if opens > closes:
+        cand2 = cand + ('}' * (opens - closes))
+        try:
+            obj = json.loads(cand2)
+            return cand2, obj
+        except Exception:
+            pass
+
+    # Si el payload está entrecomillado literalmente (ej: '"action":...') intentar quitar comillas envolventes
+    if (cand.startswith('"') and cand.endswith('"')) or (cand.startswith("'") and cand.endswith("'")):
+        inner = cand[1:-1]
+        try:
+            obj = json.loads(inner)
+            return inner, obj
+        except Exception:
+            # también intentar envolver inner con llaves
+            maybe = '{' + inner + '}'
             try:
-                data = json.loads(message)
-            except Exception as e:
-                err = f"JSON inválido: {e}"
-                print(err)
-                await websocket.send(json.dumps({"error": err}))
-                continue
+                obj = json.loads(maybe)
+                return maybe, obj
+            except Exception:
+                pass
 
-            action = data.get("action")
+    # Último intento: si la cadena no comienza por '{' pero contiene ':' y comillas, envolver y probar
+    if not cand.startswith('{') and ':' in cand and '"' in cand:
+        cand2 = '{' + cand + '}'
+        try:
+            obj = json.loads(cand2)
+            return cand2, obj
+        except Exception:
+            pass
 
-            if action == "get_products":
+    return None, None
+
+
+def normalize_product_keys(product):
+    
+    if not product or not isinstance(product, dict):
+        return product
+    return {str(k).lower(): v for k, v in product.items()}
+
+
+async def envio_seguro(ws, mensaje: dict) -> bool:
+    
+    try:
+        await ws.send(json.dumps(mensaje))
+        return True
+    except Exception as e:
+        try:
+            print(f"envio_seguro error a {ws.remote_address}: {e}")
+        except Exception:
+            print(f"envio_seguro error a websocket desconocido: {e}")
+        return False
+
+
+async def difundir(mensaje: dict, excluir=None):
+    to_remove = []
+    for cliente in list(clientes_conectados):
+        if cliente == excluir:
+            continue
+        ok = await envio_seguro(cliente, mensaje)
+        if not ok:
+            to_remove.append(cliente)
+    for c in to_remove:
+        if c in clientes_conectados:
+            clientes_conectados.remove(c)
+
+
+async def poller_realtime(poll_interval: int = 5):
+
+    global last_seen_id
+    print(f"Iniciando poller realtime (interval={poll_interval}s). last_seen_id inicial={last_seen_id}")
+    while True:
+        try:
+            resp = supabase.table("producto").select("*").execute()
+            rows = getattr(resp, 'data', None) or []
+            # Filtrar nuevos por id
+            nuevos = []
+            for r in rows:
                 try:
-                    response = supabase.table("producto").select("*").execute()
-                    await websocket.send(json.dumps({
-                        "type": "products",
-                        "data": response.data
-                    }))
+                    rid = None
+                    if pk_column and pk_column in r:
+                        rid = int(r.get(pk_column))
+                    else:
+                        # intentar detectar algún id numérico en la fila
+                        for k, v in r.items():
+                            try:
+                                if isinstance(v, (int, float)) and float(v).is_integer():
+                                    rid = int(v)
+                                    break
+                            except Exception:
+                                continue
+                except Exception:
+                    rid = None
+                if rid is not None and rid > last_seen_id:
+                    nuevos.append((rid, r))
+
+            if nuevos:
+                # ordenar por id ascendente
+                nuevos.sort(key=lambda x: x[0])
+                for rid, row in nuevos:
+                    print(f"Poller: nuevo producto detectado id={rid}")
+                    await difundir({"type": "new_product", "data": [row]})
+                    last_seen_id = max(last_seen_id, rid)
+
+        except Exception as e:
+            print("Error en poller_realtime:", e)
+            traceback.print_exc()
+
+        await asyncio.sleep(poll_interval)
+
+
+async def manejador(ws):
+    print(f"Cliente conectado: {ws.remote_address}")
+    clientes_conectados.add(ws)
+    try:
+        async for mensaje in ws:
+            print(f"Mensaje recibido de {ws.remote_address}: {repr(mensaje)}")
+            raw = sanear_mensaje(mensaje)
+            if not raw:
+                await envio_seguro(ws, {"error": "Mensaje vacío"})
+                continue
+            try:
+                data = json.loads(raw)
+            except Exception as e:
+                # Intentar reparar JSON comunes (falta llave inicial/fin, payload entrecomillado, etc.)
+                reparado_raw, reparado_obj = intentar_reparar_json(raw)
+                if reparado_obj is not None:
+                    print("JSON reparado. raw antes:", repr(raw), "-> reparado:", reparado_raw)
+                    data = reparado_obj
+                else:
+                    err = f"JSON inválido: {e}"
+                    print(err, "raw repr:", repr(raw))
+                    await envio_seguro(ws, {"error": err})
+                    continue
+
+            accion = data.get("action")
+
+            if accion == "get_products":
+                try:
+                    resp = supabase.table("producto").select("*").execute()
+                    await envio_seguro(ws, {"type": "products", "data": resp.data})
                 except Exception as e:
                     print("Error al obtener productos:", e)
                     traceback.print_exc()
-                    await websocket.send(json.dumps({"error": str(e)}))
+                    await envio_seguro(ws, {"error": str(e)})
 
-            elif action == "add_product":
-                product = data.get("product")
+            elif accion == "add_product":
+                producto = data.get("product")
+                # Logs adicionales para depuración
+                print("Producto a insertar (raw):", repr(producto), "tipo:", type(producto))
+                # Si el producto vino como string JSON, intentar parsearlo
+                if isinstance(producto, str):
+                    try:
+                        producto = json.loads(producto)
+                        print("Producto parseado desde string:", producto)
+                    except Exception:
+                        print("No se pudo parsear 'product' desde string; intentando insertar tal cual.")
+
+                # Normalizar claves a minúsculas para que coincidan con columnas en la BD (postgrest espera nombres en minúscula)
                 try:
-                    result = supabase.table("producto").insert(product).execute()
-                    await websocket.send(json.dumps({
-                        "type": "add_product",
-                        "status": "success",
-                        "data": result.data
-                    }))
+                    producto_db = normalize_product_keys(producto)
+                    print("Producto normalizado para BD:", producto_db)
+                except Exception:
+                    producto_db = producto
 
-                    # Notificar a los demás clientes
-                    for client in connected_clients.copy():
-                        if client != websocket:
-                            try:
-                                await client.send(json.dumps({
-                                    "type": "new_product",
-                                    "data": result.data
-                                }))
-                            except Exception as send_err:
-                                print(f"Error al notificar a cliente {client.remote_address}: {send_err}")
+                try:
+                    res = supabase.table("producto").insert(producto_db).execute()
+                    # Mostrar la respuesta completa para entender fallos
+                    try:
+                        # Algunos clientes exponen atributos distintos
+                        print("Respuesta insert -> data:", getattr(res, 'data', None), "status_code:", getattr(res, 'status_code', None), "error:", getattr(res, 'error', None))
+                    except Exception:
+                        print("Respuesta insert (repr):", repr(res))
+
+                    # Manejo de errores según la respuesta
+                    # Si res tiene atributo 'error' o no contiene data, avisar
+                    insert_data = None
+                    if hasattr(res, 'data'):
+                        insert_data = res.data
+
+                    if insert_data:
+                        await envio_seguro(ws, {"type": "add_product", "status": "success", "data": insert_data})
+                        # difundir a los demás
+                        await difundir({"type": "new_product", "data": insert_data}, excluir=ws)
+                    else:
+                        # Enviar detalle de error si existe
+                        detalle = getattr(res, 'error', None) or str(res)
+                        print("Insert no devolvió datos. detalle:", detalle)
+                        await envio_seguro(ws, {"error": "Inserción fallida", "detail": str(detalle)})
+
                 except Exception as e:
-                    # Capturar error de inserción y devolver detalle al cliente
-                    print("Error al insertar producto:", e)
+                    print("Error al insertar producto (excepción):", e)
                     traceback.print_exc()
-                    await websocket.send(json.dumps({"error": str(e)}))
+                    await envio_seguro(ws, {"error": str(e)})
 
             else:
-                await websocket.send(json.dumps({"error": "Acción no reconocida"}))
+                await envio_seguro(ws, {"error": "Acción no reconocida"})
 
     except Exception as e:
-        print(f"Excepción en handler para {websocket.remote_address}: {e}")
+        try:
+            addr = ws.remote_address
+        except Exception:
+            addr = "desconocido"
+        print(f"Excepción en manejador para {addr}: {e}")
         traceback.print_exc()
     finally:
-        if websocket in connected_clients:
-            connected_clients.remove(websocket)
-        print(f"Cliente desconectado: {websocket.remote_address}")
+        if ws in clientes_conectados:
+            clientes_conectados.remove(ws)
+        try:
+            print(f"Cliente desconectado: {ws.remote_address}")
+        except Exception:
+            print("Cliente desconectado: (dirección desconocida)")
+
 
 async def main():
-    async with websockets.serve(handler, "localhost", 8000):
-        print("✅ Servidor WebSocket corriendo en ws://localhost:8000")
-        await asyncio.Future()  # Mantiene el servidor corriendo
+    puerto = int(os.getenv("WEBSOCKET_PORT", "8000"))
+    host = os.getenv("WEBSOCKET_HOST", "localhost")
+    # Inicializar last_seen_id con el máximo id actual para no reenviar todo el histórico
+    global last_seen_id
+    try:
+        # Intentar detectar la columna PK de la tabla `producto` y el último id
+        # 1) Intentar pedir información del esquema vía PostgREST (information_schema no está expuesto por REST, así que hacemos select a * y miramos keys)
+        resp = supabase.table("producto").select("*").limit(1).execute()
+        rows = getattr(resp, 'data', None) or []
+        detected_pk = None
+        if rows:
+            first = rows[0]
+            # Buscar una clave que contenga 'id' y parezca PK: prefer 'idproducto', 'id_producto', 'id'
+            for candidate in ['idproducto', 'id_producto', 'id', 'idProducto', 'idProducto'.lower()]:
+                if candidate in first:
+                    detected_pk = candidate
+                    break
+            if not detected_pk:
+                # buscar cualquier key que empiece o termine con 'id'
+                for k in first.keys():
+                    if k.lower().startswith('id') or k.lower().endswith('id'):
+                        detected_pk = k
+                        break
+
+            if detected_pk:
+                pk_column = detected_pk
+                # ahora obtener max id
+                try:
+                    # traer todos los ids (puede ser costoso en tablas grandes, por eso limitamos a obtener el max por SQL sería ideal)
+                    resp_all = supabase.table("producto").select(pk_column).execute()
+                    all_rows = getattr(resp_all, 'data', None) or []
+                    max_id = 0
+                    for r in all_rows:
+                        try:
+                            rid = int(r.get(pk_column))
+                            if rid > max_id:
+                                max_id = rid
+                        except Exception:
+                            continue
+                    last_seen_id = max_id
+                    print(f"pk_column detectada: {pk_column}, last_seen_id inicializado a {last_seen_id}")
+                except Exception as e:
+                    print("Error al obtener max id usando pk_column:", e)
+        else:
+            print("Tabla producto vacía o sin filas; last_seen_id se queda en 0")
+    except Exception as e:
+        print("No se pudo inicializar last_seen_id:", e)
+
+    async with websockets.serve(manejador, host, puerto):
+        print(f"✅ Servidor WebSocket corriendo en ws://{host}:{puerto}")
+        # Lanzar poller en background (backend-only realtime)
+        asyncio.create_task(poller_realtime(poll_interval=int(os.getenv('POLL_INTERVAL', '5'))))
+        await asyncio.Future()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
+
