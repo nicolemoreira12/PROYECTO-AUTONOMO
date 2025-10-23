@@ -1,4 +1,4 @@
-"""Wrapper ligero para el cliente de Supabase usado por el proyecto."""
+
 from config import supabase
 
 # Reexportar como 'db' para que otros módulos importen desde here
