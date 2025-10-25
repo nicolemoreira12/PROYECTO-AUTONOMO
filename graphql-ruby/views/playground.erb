@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GraphQL Playground - Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-playground-react/build/static/css/index.css">
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js"></script>
+  <script>
+    window.addEventListener('load', function(event) {
+      GraphQLPlayground.init(document.getElementById('root'), {
+        endpoint: '/graphql',
+        settings: {
+          'editor.theme': 'dark',
+          'editor.cursorShape': 'line',
+          'editor.reuseHeaders': true,
+          'request.credentials': 'include',
+        },
+        tabs: [
+          {
+            name: 'Métricas Generales',
+            endpoint: '/graphql',
+            query: `# Consulta las métricas generales del sistema
+query MetricasGenerales {
+  metricasGenerales {
+    totalOrdenes
+    totalProductos
+    totalUsuarios
+    totalEmprendedores
+    totalIngresos
+    totalIngresosFormateado
+    productosAgotados
+    ordenesPendientes
+    crecimientoMensual
+    ticketPromedio
+    ticketPromedioFormateado
+  }
+}`,
+          },
+          {
+            name: 'Productos Top',
+            endpoint: '/graphql',
+            query: `# Consulta los productos más vendidos
+query ProductosMasVendidos($limite: Int, $filtroFecha: FiltroFechaInput) {
+  productosMasVendidos(limite: $limite, filtroFecha: $filtroFecha) {
+    productoId
+    nombre
+    totalVendido
+    ingresosGenerados
+    ingresosFormateado
+    categoria
+    emprendedor
+    precioPromedio
+  }
+}
+
+# Variables
+# {
+#   "limite": 10,
+#   "filtroFecha": {
+#     "fechaInicio": "2024-01-01",
+#     "fechaFin": "2024-12-31"
+#   }
+# }`,
+          },
+          {
+            name: 'Estadísticas Categorías',
+            endpoint: '/graphql',
+            query: `# Consulta estadísticas por categoría
+query EstadisticasCategorias {
+  estadisticasPorCategoria {
+    categoriaId
+    nombreCategoria
+    totalProductos
+    totalVendido
+    ingresosTotales
+    productosAgotados
+    precioPromedio
+    participacionMercado
+  }
+}`,
+          },
+          {
+            name: 'Top Compradores',
+            endpoint: '/graphql',
+            query: `# Consulta los mejores compradores
+query TopCompradores($limite: Int) {
+  topCompradores(limite: $limite) {
+    usuarioId
+    nombreCompleto
+    email
+    totalOrdenes
+    totalGastado
+    ticketPromedio
+    primeraCompra
+    ultimaCompra
+  }
+}
+
+# Variables
+# {
+#   "limite": 10
+# }`,
+          },
+          {
+            name: 'Reporte Inventario',
+            endpoint: '/graphql',
+            query: `# Consulta el reporte completo de inventario
+query ReporteInventario {
+  reporteInventario {
+    productoId
+    nombre
+    categoria
+    stockActual
+    stockMinimo
+    estadoStock
+    valorInventario
+    rotacion
+  }
+}`,
+          },
+          {
+            name: 'Reporte Ingresos',
+            endpoint: '/graphql',
+            query: `# Consulta el reporte de ingresos
+query ReporteIngresos($filtroFecha: FiltroFechaInput, $agrupacion: String) {
+  reporteIngresos(filtroFecha: $filtroFecha, agrupacion: $agrupacion) {
+    periodo
+    totalOrdenes
+    ingresosBrutos
+    ingresosNetos
+    comisiones
+    ticketPromedio
+    crecimiento
+  }
+}
+
+# Variables
+# {
+#   "filtroFecha": {
+#     "fechaInicio": "2024-01-01",
+#     "fechaFin": "2024-12-31"
+#   },
+#   "agrupacion": "mes"
+# }`,
+          },
+          {
+            name: 'Productos',
+            endpoint: '/graphql',
+            query: `# Consulta productos
+query Productos($disponiblesSolo: Boolean) {
+  productos(disponiblesSolo: $disponiblesSolo) {
+    id
+    nombre
+    descripcion
+    precio
+    precioFormateado
+    stock
+    disponible
+    imagenUrl
+    categoria {
+      id
+      nombre
+    }
+    emprendedor {
+      id
+      nombreNegocio
+    }
+  }
+}
+
+# Variables
+# {
+#   "disponiblesSolo": true
+# }`,
+          }
+        ]
+      })
+    })
+  </script>
+</body>
+</html>
