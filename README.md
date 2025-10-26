@@ -1,24 +1,84 @@
-# PROYECTO-AUTONOMO
+# PROYECTO-AUTONOMO — Marketplace Realtime
 
-Este repositorio contiene un backend WebSocket y scripts de prueba para un marketplace.
+**Monorepo** con WebSocket realtime + Frontend integrados.
 
-Carpetas importantes:
-- `websoker/`: servidor WebSocket y scripts relacionados.
-- `websoker/scripts/`: scripts de prueba (envío WS, inserciones demo).
+## 📁 Estructura
 
-Resumen rápido de cómo arrancar el backend en desarrollo:
+- **websoker/** (Python): Servidor WebSocket con notificaciones en tiempo real, gestión de conexiones, heartbeat.
+- **Markplace/** (TypeScript/Node.js): Frontend/API del marketplace.
+- **INTEGRATION.md**: Guía completa de integración y startup.
 
-1. Abrir PowerShell en la raíz del proyecto.
-2. Activar el virtualenv (si existe):
+## 🚀 Arranque Rápido
 
-& .\.venv\Scripts\Activate.ps1
+### Terminal 1 — Servidor WebSocket
 
-3. Ir a la carpeta `websoker` y ejecutar:
+```powershell
+cd websoker
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python .\app.py
+```
 
-$env:WEBSOCKET_PORT='8002'; & .\.venv\Scripts\python.exe .\app.py
+Verás: `✅ Servidor WebSocket corriendo en ws://localhost:8000`
 
-4. Para pruebas:
-- Listener: & .\.venv\Scripts\python.exe .\ws_listener.py
-- Insert demo: & .\.venv\Scripts\python.exe .\create_emprendedor_demo.py
-- Enviar add via WS: & .\.venv\Scripts\python.exe .\scripts\add_via_ws_simple.py
+### Terminal 2 — Frontend
+
+```powershell
+cd Markplace
+npm install
+npm start
+```
+
+Verás: `listening on port 3000` (o similar)
+
+### Terminal 3 — Test (opcional)
+
+```powershell
+cd websoker
+python .\ws_listener.py
+```
+
+## 📚 Documentación Completa
+
+- Startup detallado → **INTEGRATION.md**
+- Servidor WebSocket → **websoker/README.md**
+- Frontend → **Markplace/README.md**
+
+## 🔧 Variables de Entorno
+
+Edita o crea `.env` en `websoker/`:
+
+```env
+WEBSOCKET_PORT=8000
+WEBSOCKET_HOST=localhost
+SUPABASE_URL=tu_url
+SUPABASE_KEY=tu_key
+PING_INTERVAL=10
+PING_TIMEOUT=5
+POLL_INTERVAL=5
+```
+
+Copia desde `.env.example` si existe.
+
+## ✅ Características
+
+- ✅ Notificaciones en tiempo real (WebSocket)
+- ✅ Gestión de conexiones con heartbeat
+- ✅ Subscripción a canales
+- ✅ Broadcast de eventos
+- ✅ Poller realtime para cambios BD
+- ✅ Estructura monorepo limpia
+
+## 🛠️ Próximas Mejoras
+
+- Docker Compose para orquestación
+- JWT authentication
+- Redis Pub/Sub para escalabilidad
+- Rate limiting
+- Logs estructurados
+
+---
+
+**Ver INTEGRATION.md para detalles completos.**
 

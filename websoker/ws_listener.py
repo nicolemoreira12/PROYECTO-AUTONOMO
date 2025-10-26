@@ -3,7 +3,7 @@ import asyncio
 import websockets
 
 async def main():
-    uri = "ws://localhost:8002"
+    uri = "ws://localhost:8000"
     try:
         async with websockets.connect(uri) as ws:
             print("Conectado al servidor WS, esperando mensajes...")

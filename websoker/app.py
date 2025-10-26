@@ -7,6 +7,11 @@ import traceback
 from config import supabase
 
 clientes_conectados = set()
+# Map de canal -> set de websockets suscritos (para notificaciones)
+channel_subscriptions = {}
+# Map de websocket -> set de canales suscritos (para limpieza rápida)
+ws_channels = {}
+
 # Último id conocido para el poller realtime
 last_seen_id = 0
 # Nombre de la columna PK a usar en el poller (se detecta al arrancar)
@@ -119,6 +124,49 @@ async def envio_seguro(ws, mensaje: dict) -> bool:
         return False
 
 
+def _cleanup_ws(ws):
+    """Quitar websocket de estructuras de tracking (no async)."""
+    try:
+        if ws in clientes_conectados:
+            clientes_conectados.remove(ws)
+    except Exception:
+        pass
+    chans = ws_channels.pop(ws, None)
+    if chans:
+        for ch in list(chans):
+            subs = channel_subscriptions.get(ch)
+            if subs and ws in subs:
+                subs.remove(ws)
+            if subs is not None and len(subs) == 0:
+                channel_subscriptions.pop(ch, None)
+
+
+async def heartbeat_loop(ping_interval: int = 10, ping_timeout: int = 5):
+    """Enviar pings periódicos a todos los clientes conectados y cerrar los que no respondan.
+
+    ping_interval: segundos entre pings.
+    ping_timeout: tiempo en segundos a esperar por el pong antes de cerrar.
+    """
+    print(f"Iniciando heartbeat: interval={ping_interval}s timeout={ping_timeout}s")
+    while True:
+        await asyncio.sleep(ping_interval)
+        for ws in list(clientes_conectados):
+            try:
+                # ws.ping() devuelve un awaitable que completa al recibir pong
+                pong_waiter = ws.ping()
+                await asyncio.wait_for(pong_waiter, timeout=ping_timeout)
+            except Exception as e:
+                try:
+                    print(f"Heartbeat: websocket no responde, cerrando {ws.remote_address}: {e}")
+                except Exception:
+                    print(f"Heartbeat: websocket no responde, cerrando websocket desconocido: {e}")
+                try:
+                    await ws.close()
+                except Exception:
+                    pass
+                _cleanup_ws(ws)
+
+
 async def difundir(mensaje: dict, excluir=None):
     to_remove = []
     for cliente in list(clientes_conectados):
@@ -130,6 +178,52 @@ async def difundir(mensaje: dict, excluir=None):
     for c in to_remove:
         if c in clientes_conectados:
             clientes_conectados.remove(c)
+
+
+async def difundir_canal(mensaje: dict, canal: str, excluir=None):
+    """Difundir mensaje sólo a suscriptores de un canal."""
+    if not canal:
+        return
+    to_remove = []
+    subs = list(channel_subscriptions.get(canal, set()))
+    for cliente in subs:
+        if cliente == excluir:
+            continue
+        ok = await envio_seguro(cliente, mensaje)
+        if not ok:
+            to_remove.append(cliente)
+    for c in to_remove:
+        # quitar de clientes_conectados y de la subscripción
+        if c in clientes_conectados:
+            clientes_conectados.remove(c)
+        chans = ws_channels.get(c)
+        if chans and canal in chans:
+            chans.remove(canal)
+        subs_set = channel_subscriptions.get(canal)
+        if subs_set and c in subs_set:
+            subs_set.remove(c)
+
+
+def subscribe_channel(ws, canal: str):
+    channel_subscriptions.setdefault(canal, set()).add(ws)
+    ws_channels.setdefault(ws, set()).add(canal)
+
+
+def unsubscribe_channel(ws, canal: str):
+    subs = channel_subscriptions.get(canal)
+    if subs and ws in subs:
+        subs.remove(ws)
+    chans = ws_channels.get(ws)
+    if chans and canal in chans:
+        chans.remove(canal)
+    if subs is not None and len(subs) == 0:
+        channel_subscriptions.pop(canal, None)
+    if chans is not None and len(chans) == 0:
+        ws_channels.pop(ws, None)
+
+
+async def notify_channel(canal: str, mensaje: dict, excluir=None):
+    await difundir_canal(mensaje, canal, excluir=excluir)
 
 
 async def poller_realtime(poll_interval: int = 5):
@@ -201,6 +295,40 @@ async def manejador(ws):
                     continue
 
             accion = data.get("action")
+
+            # Nuevas acciones: subscribe/unsubscribe/notify/ping
+            if accion == "subscribe":
+                canal = data.get("channel")
+                if not canal:
+                    await envio_seguro(ws, {"error": "Falta 'channel' en subscribe"})
+                else:
+                    subscribe_channel(ws, canal)
+                    await envio_seguro(ws, {"type": "subscribed", "channel": canal})
+                continue
+
+            if accion == "unsubscribe":
+                canal = data.get("channel")
+                if not canal:
+                    await envio_seguro(ws, {"error": "Falta 'channel' en unsubscribe"})
+                else:
+                    unsubscribe_channel(ws, canal)
+                    await envio_seguro(ws, {"type": "unsubscribed", "channel": canal})
+                continue
+
+            if accion == "notify":
+                canal = data.get("channel")
+                payload = data.get("payload")
+                if not canal or payload is None:
+                    await envio_seguro(ws, {"error": "Falta 'channel' o 'payload' en notify"})
+                else:
+                    await notify_channel(canal, {"type": "notification", "channel": canal, "data": payload}, excluir=ws)
+                    await envio_seguro(ws, {"type": "notify_ack", "channel": canal})
+                continue
+
+            if accion == "ping":
+                await envio_seguro(ws, {"type": "pong"})
+                continue
+
 
             if accion == "get_products":
                 try:
@@ -332,6 +460,8 @@ async def main():
         print(f"✅ Servidor WebSocket corriendo en ws://{host}:{puerto}")
         # Lanzar poller en background (backend-only realtime)
         asyncio.create_task(poller_realtime(poll_interval=int(os.getenv('POLL_INTERVAL', '5'))))
+        # Lanzar heartbeat para desconectar clientes inactivos
+        asyncio.create_task(heartbeat_loop(ping_interval=int(os.getenv('PING_INTERVAL', '10')), ping_timeout=int(os.getenv('PING_TIMEOUT', '5'))))
         await asyncio.Future()
 
 
