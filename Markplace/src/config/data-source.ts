@@ -14,13 +14,15 @@ import { Transaccion } from "../entities/Transaccion";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: "localhost",
-  port: 5432,
-  username: "postgres",   
-  password: "120994",     
-  database: "postgres",  
-  synchronize: true,      
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 5432,
+  username: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASS || "password",
+  database: process.env.DB_NAME || "postgres",
+  synchronize: true,
   logging: true,
+  // Configuración SSL para Supabase (requerido para conexiones remotas)
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
   entities: [
     Usuario,
     Producto,

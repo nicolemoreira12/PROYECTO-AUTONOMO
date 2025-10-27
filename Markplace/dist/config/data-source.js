@@ -16,10 +16,10 @@ const TarjetaVirtual_1 = require("../entities/TarjetaVirtual");
 const Transaccion_1 = require("../entities/Transaccion");
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
-    host: "localhost",
+    host: "db.rvyietphxsbrrehlaeji.supabase.co",
     port: 5432,
     username: "postgres",
-    password: "120994",
+    password: "12099441226n",
     database: "postgres",
     synchronize: true,
     logging: true,

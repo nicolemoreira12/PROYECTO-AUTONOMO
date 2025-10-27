@@ -1,3 +1,5 @@
+import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import { AppDataSource } from "./config/data-source";
 import { errorHandler } from "./middlewares/error.middleware";
