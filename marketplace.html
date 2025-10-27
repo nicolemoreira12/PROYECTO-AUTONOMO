@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Premium - Dashboard en Tiempo Real</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border: 2px solid transparent;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-left-color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            max-width: 350px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-bar button {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .search-bar button:hover {
+            background: #764ba2;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab.active {
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .product-info {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 13px;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .product-stock {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+            flex: 1;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-buy {
+            flex: 1;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-buy:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .btn-wishlist {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            color: #667eea;
+            border: 1px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-wishlist:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .order-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .order-item:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-info h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .order-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .order-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .order-status.pending {
+            background: #fef08a;
+            color: #854d0e;
+        }
+
+        .order-status.completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .order-status.processing {
+            background: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-item.success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+
+        .notification-item.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .notification-item.warning {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            align-items: center;
+        }
+
+        .cart-item-image {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .cart-item-price {
+            color: #667eea;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .cart-item-remove {
+            cursor: pointer;
+            color: #ef4444;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-primary {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1200px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+
+            .sidebar-menu {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .header-left {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-bar {
+                max-width: 100%;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .cart-sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-store"></i>
+                Marketplace
+            </div>
+            <div class="sidebar-menu">
+                <div class="sidebar-item active" onclick="switchTab('dashboard')">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </div>
+                <div class="sidebar-item" onclick="switchTab('productos')">
+                    <i class="fas fa-box"></i>
+                    Productos
+                </div>
+                <div class="sidebar-item" onclick="switchTab('ordenes')">
+                    <i class="fas fa-shopping-bag"></i>
+                    Órdenes
+                </div>
+                <div class="sidebar-item" onclick="switchTab('notificaciones')">
+                    <i class="fas fa-bell"></i>
+                    Notificaciones
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="header">
+                <div class="header-left">
+                    <h1>🛍️ Marketplace Premium</h1>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Buscar productos...">
+                        <button onclick="buscar()"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="connection-status">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="connectionText">Conectando...</span>
+                    </div>
+                    <div class="cart-icon" onclick="toggleCart()">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge" id="cartCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <!-- DASHBOARD TAB -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Clientes Conectados</span>
+                                <span class="stat-icon">👥</span>
+                            </div>
+                            <div class="stat-value" id="totalClients">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Productos</span>
+                                <span class="stat-icon">📦</span>
+                            </div>
+                            <div class="stat-value" id="totalProducts">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Órdenes Totales</span>
+                                <span class="stat-icon">📋</span>
+                            </div>
+                            <div class="stat-value" id="totalOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Ingresos</span>
+                                <span class="stat-icon">💰</span>
+                            </div>
+                            <div class="stat-value" id="totalRevenue">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Actividad Reciente</h3>
+                        <div id="recentActivityList" class="orders-list"></div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTOS TAB -->
+                <div id="productos" class="tab-content">
+                    <div class="card">
+                        <h3>➕ Agregar Nuevo Producto</h3>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label>Nombre del Producto</label>
+                                <input type="text" id="productName" placeholder="Ej: Laptop Gaming">
+                            </div>
+                            <div class="form-group">
+                                <label>Precio</label>
+                                <input type="number" id="productPrice" placeholder="Ej: 1200.50">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock</label>
+                                <input type="number" id="productStock" placeholder="Ej: 10">
+                            </div>
+                        </div>
+                        <button class="btn-primary" onclick="addProduct()">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🛒 Catálogo de Productos</h3>
+                        <div id="productsList" class="products-grid"></div>
+                    </div>
+                </div>
+
+                <!-- ÓRDENES TAB -->
+                <div id="ordenes" class="tab-content">
+                    <div class="card">
+                        <h3>📦 Órdenes Recientes</h3>
+                        <div id="ordersList" class="orders-list"></div>
+                    </div>
+                </div>
+
+                <!-- NOTIFICACIONES TAB -->
+                <div id="notificaciones" class="tab-content">
+                    <div class="card">
+                        <h3>🔔 Centro de Notificaciones</h3>
+                        <div id="notificationsList" class="notifications-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARRITO SIDEBAR -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>🛒 Mi Carrito</h3>
+            <span style="cursor: pointer; font-size: 24px; color: #999;" onclick="toggleCart()">×</span>
+        </div>
+        <div class="cart-items" id="cartItemsList">
+            <div class="empty-state">
+                <div class="empty-state-icon">🛒</div>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+            <button class="btn-checkout" onclick="checkout()">
+                Proceder al Pago
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURACIÓN ==========
+        const WS_URL = "ws://127.0.0.1:8000";
+        let ws = null;
+        let clientId = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let reconnectTimeout = null;
+
+        // ========== ESTADO GLOBAL ==========
+        const state = {
+            products: [],
+            orders: [],
+            notifications: [],
+            cart: [],
+            currentTab: 'dashboard'
+        };
+
+        // ========== WEBSOCKET ==========
+        function connectWebSocket() {
+            try {
+                console.log(`🔄 Intentando conectar a ${WS_URL}... (intento ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+                addNotification(`🔄 Conectando al servidor...`, "warning");
+
+                ws = new WebSocket(WS_URL);
+
+                ws.onopen = () => {
+                    reconnectAttempts = 0;
+                    updateConnectionStatus(true);
+                    console.log("✅ Conectado al WebSocket en " + WS_URL);
+                    addNotification("✅ Conectado al servidor WebSocket", "success");
+
+                    // Inicializar cliente
+                    ws.send(JSON.stringify({
+                        action: "init",
+                        user_id: "user_" + Date.now(),
+                        emprendedor_id: "emp_" + Date.now()
+                    }));
+
+                    // Suscribirse a canales
+                    const channels = ["dashboard", "products:feed", "orders:feed", "notifications", "global"];
+                    channels.forEach(ch => {
+                        ws.send(JSON.stringify({ action: "subscribe", channel: ch }));
+                    });
+
+                    // Pedir estadísticas iniciales
+                    requestStats();
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        handleMessage(message);
+                    } catch (error) {
+                        console.error("Error parseando mensaje:", error, event.data);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error("❌ Error WebSocket:", error);
+                    updateConnectionStatus(false);
+                    addNotification("❌ Error en la conexión WebSocket", "error");
+                };
+
+                ws.onclose = () => {
+                    console.log("❌ Conexión cerrada");
+                    updateConnectionStatus(false);
+
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
+                        console.log(`🔄 Reintentando en ${delay}ms...`);
+                        reconnectTimeout = setTimeout(connectWebSocket, delay);
+                    } else {
+                        console.error("❌ Máximo de intentos de reconexión alcanzado");
+                        addNotification("❌ No se pudo conectar al servidor. Verifique que esté corriendo.", "error");
+                    }
+                };
+
+            } catch (error) {
+                console.error("Error al crear WebSocket:", error);
+                addNotification("❌ Error al conectar: " + error.message, "error");
+            }
+        }
+
+        function handleMessage(message) {
+            if (message.type === "init:success" || message.type === "connection:established") {
+                clientId = message.client_id;
+                addNotification("✅ Conectado al servidor", "success");
+            }
+
+            if (message.type === "stats") {
+                updateStats(message.data || message);
+            }
+
+            if (message.type === "message:received" && message.data) {
+                const event = message.data.event_type;
+                if (event === "product:added") {
+                    addProductToList(message.data.product);
+                } else if (event === "order:created") {
+                    addOrderToList(message.data.order);
+                }
+            }
+        }
+
+        // ========== FUNCIONES UI ==========
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById("statusDot");
+            const text = document.getElementById("connectionText");
+
+            if (connected) {
+                dot.classList.remove("offline");
+                text.textContent = "✅ Conectado";
+            } else {
+                dot.classList.add("offline");
+                text.textContent = "❌ Desconectado";
+            }
+        }
+
+        function switchTab(tabName) {
+            state.currentTab = tabName;
+
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+            document.getElementById(tabName).classList.add("active");
+
+            document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
+            event.target.closest(".sidebar-item").classList.add("active");
+        }
+
+        function addProduct() {
+            const name = document.getElementById("productName").value;
+            const price = document.getElementById("productPrice").value;
+            const stock = document.getElementById("productStock").value;
+
+            if (!name || !price || !stock) {
+                addNotification("⚠️ Completa todos los campos", "warning");
+                return;
+            }
+
+            const product = {
+                id: "prod_" + Date.now(),
+                nombre: name,
+                precio: parseFloat(price),
+                stock: parseInt(stock),
+                emoji: ["🖥️", "⌨️", "🖱️", "🎮", "📱", "📷", "🎧", "⌚"][Math.floor(Math.random() * 8)]
+            };
+
+            // Enviar por WebSocket pero NO agregar localmente
+            // El servidor retornará el evento y se agregará entonces
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    action: "send_message",
+                    data: { event_type: "product:added", product }
+                }));
+                
+                // Limpiar formulario
+                document.getElementById("productName").value = "";
+                document.getElementById("productPrice").value = "";
+                document.getElementById("productStock").value = "";
+                addNotification("✅ Producto agregado exitosamente", "success");
+            } else {
+                addNotification("❌ No estás conectado", "error");
+            }
+        }
+
+        function addProductToList(product) {
+            state.products.push(product);
+            renderProducts();
+            updateStats({});
+        }
+
+        function renderProducts() {
+            const list = document.getElementById("productsList");
+
+            if (state.products.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">📦</div><p>No hay productos aún</p></div>';
+                return;
+            }
+
+            list.innerHTML = state.products.map(p => `
+                <div class="product-card">
+                    <div class="product-image">
+                        ${p.emoji}
+                        ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$${p.precio.toFixed(2)}</div>
+                        <div class="product-stock">Stock: ${p.stock}</div>
+                        <div class="product-actions">
+                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                                <i class="fas fa-cart-plus"></i> Comprar
+                            </button>
+                            <button class="btn-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function buscar() {
+            const term = document.getElementById("searchInput").value.toLowerCase();
+            const list = document.getElementById("productsList");
+
+            if (!term.trim()) {
+                renderProducts();
+                return;
+            }
+
+            const filtered = state.products.filter(p =>
+                p.nombre.toLowerCase().includes(term)
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">🔍</div><p>No se encontraron productos con "<strong>' + term + '</strong>"</p></div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(p => `
+                <div class="product-card">
+                    <div class="product-image">
+                        ${p.emoji}
+                        ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$${p.precio.toFixed(2)}</div>
+                        <div class="product-stock">Stock: ${p.stock}</div>
+                        <div class="product-actions">
+                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                                <i class="fas fa-cart-plus"></i> Comprar
+                            </button>
+                            <button class="btn-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Buscar en tiempo real mientras escribes
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener("keyup", function (e) {
+                    if (e.key === "Enter") {
+                        buscar();
+                    } else {
+                        buscar();
+                    }
+                });
+            }
+        });
+
+        function addToCart(id, name, price) {
+            const item = state.cart.find(i => i.id === id);
+            if (item) {
+                item.cantidad++;
+            } else {
+                state.cart.push({ id, name, price, cantidad: 1, emoji: state.products.find(p => p.id === id)?.emoji || "🛍️" });
+            }
+            renderCart();
+            addNotification(`✅ ${name} agregado al carrito`, "success");
+            document.getElementById("cartCount").textContent = state.cart.reduce((sum, i) => sum + i.cantidad, 0);
+        }
+
+        function renderCart() {
+            const cartList = document.getElementById("cartItemsList");
+            const cartTotal = document.getElementById("cartTotal");
+
+            if (state.cart.length === 0) {
+                cartList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><p>Tu carrito está vacío</p></div>';
+                cartTotal.textContent = "$0.00";
+                return;
+            }
+
+            const total = state.cart.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
+
+            cartList.innerHTML = state.cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-image">${item.emoji}</div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">$${item.price.toFixed(2)} x${item.cantidad}</div>
+                    </div>
+                    <div class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</div>
+                </div>
+            `).join("");
+
+            cartTotal.textContent = "$" + total.toFixed(2);
+        }
+
+        function removeFromCart(id) {
+            state.cart = state.cart.filter(i => i.id !== id);
+            renderCart();
+            document.getElementById("cartCount").textContent = state.cart.reduce((sum, i) => sum + i.cantidad, 0);
+        }
+
+        function toggleCart() {
+            document.getElementById("cartSidebar").classList.toggle("open");
+        }
+
+        function addOrderToList(order) {
+            state.orders.push(order);
+            renderOrders();
+            updateStats({});
+        }
+
+        function renderOrders() {
+            const list = document.getElementById("ordersList");
+
+            if (state.orders.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><p>No hay órdenes aún</p></div>';
+                return;
+            }
+
+            list.innerHTML = state.orders.map(o => `
+                <div class="order-item">
+                    <div class="order-info">
+                        <h4>Orden #${o.id.substring(0, 8)}</h4>
+                        <div class="order-date">${new Date().toLocaleString()}</div>
+                    </div>
+                    <div class="order-amount">$${(o.total || 0).toFixed(2)}</div>
+                    <div class="order-status ${o.estado || 'pending'}">${o.estado === 'completed' ? '✅ Completada' : o.estado === 'processing' ? '⏳ Procesando' : '📋 Pendiente'}</div>
+                </div>
+            `).join("");
+        }
+
+        function addNotification(message, type = "success") {
+            const notification = {
+                id: Date.now(),
+                message,
+                type,
+                time: new Date().toLocaleTimeString()
+            };
+
+            state.notifications.unshift(notification);
+            if (state.notifications.length > 15) state.notifications.pop();
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById("notificationsList");
+
+            if (state.notifications.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔔</div><p>Sin notificaciones</p></div>';
+                return;
+            }
+
+            list.innerHTML = state.notifications.map(n => `
+                <div class="notification-item ${n.type}">
+                    <div>
+                        <div>${n.message}</div>
+                        <div class="notification-time">${n.time}</div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function updateStats(data) {
+            document.getElementById("totalClients").textContent = data.total_clients || 0;
+            document.getElementById("totalProducts").textContent = state.products.length;
+            document.getElementById("totalOrders").textContent = state.orders.length;
+
+            // Calcular ingresos totales desde las órdenes
+            const totalRevenue = state.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+            document.getElementById("totalRevenue").textContent = "$" + totalRevenue.toFixed(2);
+        }
+
+        function requestStats() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: "get_stats" }));
+            }
+        }
+
+        function checkout() {
+            if (state.cart.length === 0) {
+                addNotification("⚠️ Tu carrito está vacío", "warning");
+                return;
+            }
+
+            const total = state.cart.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
+            const order = {
+                id: "ord_" + Date.now(),
+                items: state.cart,
+                total: total,
+                estado: "processing",
+                timestamp: new Date().toISOString()
+            };
+
+            // Enviar por WebSocket pero NO agregar localmente
+            // El servidor retornará el evento y se agregará entonces
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    action: "send_message",
+                    data: { event_type: "order:created", order }
+                }));
+                
+                // Limpiar carrito
+                state.cart = [];
+                renderCart();
+                document.getElementById("cartCount").textContent = "0";
+                toggleCart();
+                addNotification("✅ Orden procesada correctamente", "success");
+            } else {
+                addNotification("❌ No estás conectado", "error");
+            }
+        }
+
+        // ========== INICIALIZACIÓN ==========
+        document.addEventListener("DOMContentLoaded", () => {
+            connectWebSocket();
+            setInterval(requestStats, 5000);
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ action: "ping" }));
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+
+</html>
