@@ -4,36 +4,31 @@ import asyncio
 import websockets
 import json
 import traceback
-from config import supabase
+from decimal import Decimal
+from config import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 clientes_conectados = set()
-# Map de canal -> set de websockets suscritos (para notificaciones)
 channel_subscriptions = {}
-# Map de websocket -> set de canales suscritos (para limpieza rápida)
 ws_channels = {}
 
-# Último id conocido para el poller realtime
 last_seen_id = 0
-# Nombre de la columna PK a usar en el poller (se detecta al arrancar)
 pk_column = None
+db_conn = None
 
 
 def sanear_mensaje(raw):
-    
     try:
         raw = raw.replace("\x00", "")
     except Exception:
         raw = str(raw)
-    # Postman a veces incluye un prefijo como '(Text):\r\n' o '(Binary):\r\n' — eliminarlo
     if isinstance(raw, str) and raw.startswith('(Text):'):
-        # quitar hasta la primera nueva línea
         idx = raw.find('\r\n')
         if idx == -1:
             idx = raw.find('\n')
         if idx != -1:
             raw = raw[idx+2:]
         else:
-            # si no hay newline, quitar el prefijo simple
             raw = raw[len('(Text):'):]
     if isinstance(raw, str) and raw.startswith('(Binary):'):
         idx = raw.find('\r\n')
@@ -49,13 +44,11 @@ def sanear_mensaje(raw):
 
 
 def intentar_reparar_json(raw):
-    
     if not raw or not isinstance(raw, str):
         return None, None
 
     cand = raw.strip()
 
-    # Si el mensaje viene sin la llave inicial pero contiene "action" u otras claves
     if not cand.startswith('{') and ('"action"' in cand or "'action'" in cand):
         cand2 = '{' + cand
         if not cand2.endswith('}'):
@@ -66,7 +59,6 @@ def intentar_reparar_json(raw):
         except Exception:
             pass
 
-    # Equilibrar llaves si faltan cierres
     opens = cand.count('{')
     closes = cand.count('}')
     if opens > closes:
@@ -77,14 +69,12 @@ def intentar_reparar_json(raw):
         except Exception:
             pass
 
-    # Si el payload está entrecomillado literalmente (ej: '"action":...') intentar quitar comillas envolventes
     if (cand.startswith('"') and cand.endswith('"')) or (cand.startswith("'") and cand.endswith("'")):
         inner = cand[1:-1]
         try:
             obj = json.loads(inner)
             return inner, obj
         except Exception:
-            # también intentar envolver inner con llaves
             maybe = '{' + inner + '}'
             try:
                 obj = json.loads(maybe)
@@ -92,7 +82,6 @@ def intentar_reparar_json(raw):
             except Exception:
                 pass
 
-    # Último intento: si la cadena no comienza por '{' pero contiene ':' y comillas, envolver y probar
     if not cand.startswith('{') and ':' in cand and '"' in cand:
         cand2 = '{' + cand + '}'
         try:
@@ -105,14 +94,39 @@ def intentar_reparar_json(raw):
 
 
 def normalize_product_keys(product):
-    
     if not product or not isinstance(product, dict):
         return product
-    return {str(k).lower(): v for k, v in product.items()}
+    # Mapear campos del cliente a columnas de DB
+    mapping = {
+        'nombre': 'nombreProducto',
+        'nombreproducto': 'nombreProducto',
+        'descripcion': 'descripcion',
+        'precio': 'precio',
+        'stock': 'stock',
+        'imagenurl': 'imagenURL',
+        'emprendedoridemrendedor': 'emprendedorIdEmprendedor',
+        'categoriaidcategoria': 'categoriaIdCategoria'
+    }
+    normalized = {}
+    for k, v in product.items():
+        key_lower = str(k).lower()
+        mapped_key = mapping.get(key_lower, key_lower)
+        normalized[mapped_key] = v
+    return normalized
+
+
+def convertir_para_json(obj):
+    """Convierte objetos no serializables (como Decimal) a tipos JSON compatibles"""
+    if isinstance(obj, dict):
+        return {k: convertir_para_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convertir_para_json(item) for item in obj]
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    return obj
 
 
 async def envio_seguro(ws, mensaje: dict) -> bool:
-    
     try:
         await ws.send(json.dumps(mensaje))
         return True
@@ -125,7 +139,6 @@ async def envio_seguro(ws, mensaje: dict) -> bool:
 
 
 def _cleanup_ws(ws):
-    """Quitar websocket de estructuras de tracking (no async)."""
     try:
         if ws in clientes_conectados:
             clientes_conectados.remove(ws)
@@ -142,17 +155,11 @@ def _cleanup_ws(ws):
 
 
 async def heartbeat_loop(ping_interval: int = 10, ping_timeout: int = 5):
-    """Enviar pings periódicos a todos los clientes conectados y cerrar los que no respondan.
-
-    ping_interval: segundos entre pings.
-    ping_timeout: tiempo en segundos a esperar por el pong antes de cerrar.
-    """
     print(f"Iniciando heartbeat: interval={ping_interval}s timeout={ping_timeout}s")
     while True:
         await asyncio.sleep(ping_interval)
         for ws in list(clientes_conectados):
             try:
-                # ws.ping() devuelve un awaitable que completa al recibir pong
                 pong_waiter = ws.ping()
                 await asyncio.wait_for(pong_waiter, timeout=ping_timeout)
             except Exception as e:
@@ -181,7 +188,6 @@ async def difundir(mensaje: dict, excluir=None):
 
 
 async def difundir_canal(mensaje: dict, canal: str, excluir=None):
-    """Difundir mensaje sólo a suscriptores de un canal."""
     if not canal:
         return
     to_remove = []
@@ -193,7 +199,6 @@ async def difundir_canal(mensaje: dict, canal: str, excluir=None):
         if not ok:
             to_remove.append(cliente)
     for c in to_remove:
-        # quitar de clientes_conectados y de la subscripción
         if c in clientes_conectados:
             clientes_conectados.remove(c)
         chans = ws_channels.get(c)
@@ -227,45 +232,41 @@ async def notify_channel(canal: str, mensaje: dict, excluir=None):
 
 
 async def poller_realtime(poll_interval: int = 5):
-
     global last_seen_id
     print(f"Iniciando poller realtime (interval={poll_interval}s). last_seen_id inicial={last_seen_id}")
     while True:
         try:
-            resp = supabase.table("producto").select("*").execute()
-            rows = getattr(resp, 'data', None) or []
-            # Filtrar nuevos por id
-            nuevos = []
-            for r in rows:
+            if db_conn:
                 try:
-                    rid = None
-                    if pk_column and pk_column in r:
-                        rid = int(r.get(pk_column))
-                    else:
-                        # intentar detectar algún id numérico en la fila
-                        for k, v in r.items():
-                            try:
-                                if isinstance(v, (int, float)) and float(v).is_integer():
-                                    rid = int(v)
-                                    break
-                            except Exception:
-                                continue
-                except Exception:
-                    rid = None
-                if rid is not None and rid > last_seen_id:
-                    nuevos.append((rid, r))
+                    cur = db_conn.cursor(cursor_factory=RealDictCursor)
+                    cur.execute("SELECT * FROM producto ORDER BY \"idProducto\" DESC LIMIT 100")
+                    rows = cur.fetchall()
+                    nuevos = []
+                    for r in rows:
+                        try:
+                            rid = r.get('idProducto') or r.get('id')
+                            if rid and int(rid) > last_seen_id:
+                                nuevos.append((int(rid), convertir_para_json(dict(r))))
+                        except Exception:
+                            continue
 
-            if nuevos:
-                # ordenar por id ascendente
-                nuevos.sort(key=lambda x: x[0])
-                for rid, row in nuevos:
-                    print(f"Poller: nuevo producto detectado id={rid}")
-                    await difundir({"type": "new_product", "data": [row]})
-                    last_seen_id = max(last_seen_id, rid)
+                    if nuevos:
+                        nuevos.sort(key=lambda x: x[0])
+                        for rid, row in nuevos:
+                            print(f"Poller: nuevo producto detectado id={rid}")
+                            await difundir({"type": "new_product", "data": [row]})
+                            last_seen_id = max(last_seen_id, rid)
+                except Exception as e:
+                    if "transaction is aborted" in str(e):
+                        db_conn.rollback()
+                    elif "does not exist" not in str(e):
+                        print(f"Error en poller_realtime: {str(e)[:100]}")
+                    else:
+                        db_conn.rollback()  # Siempre rollback para limpiar estado
 
         except Exception as e:
-            print("Error en poller_realtime:", e)
-            traceback.print_exc()
+            if "does not exist" not in str(e):
+                print(f"Error en poller_realtime (outer): {str(e)[:100]}")
 
         await asyncio.sleep(poll_interval)
 
@@ -283,7 +284,6 @@ async def manejador(ws):
             try:
                 data = json.loads(raw)
             except Exception as e:
-                # Intentar reparar JSON comunes (falta llave inicial/fin, payload entrecomillado, etc.)
                 reparado_raw, reparado_obj = intentar_reparar_json(raw)
                 if reparado_obj is not None:
                     print("JSON reparado. raw antes:", repr(raw), "-> reparado:", reparado_raw)
@@ -296,7 +296,6 @@ async def manejador(ws):
 
             accion = data.get("action")
 
-            # Nuevas acciones: subscribe/unsubscribe/notify/ping
             if accion == "subscribe":
                 canal = data.get("channel")
                 if not canal:
@@ -329,64 +328,72 @@ async def manejador(ws):
                 await envio_seguro(ws, {"type": "pong"})
                 continue
 
-
             if accion == "get_products":
                 try:
-                    resp = supabase.table("producto").select("*").execute()
-                    await envio_seguro(ws, {"type": "products", "data": resp.data})
+                    if db_conn:
+                        try:
+                            cur = db_conn.cursor(cursor_factory=RealDictCursor)
+                            cur.execute("SELECT * FROM producto")
+                            productos = cur.fetchall()
+                            datos = [convertir_para_json(dict(row)) for row in productos]
+                            await envio_seguro(ws, {"type": "products", "data": datos})
+                        except Exception as e:
+                            db_conn.rollback()  # Limpiar transacción
+                            raise
+                    else:
+                        await envio_seguro(ws, {"error": "No hay conexión a base de datos"})
                 except Exception as e:
-                    print("Error al obtener productos:", e)
-                    traceback.print_exc()
-                    await envio_seguro(ws, {"error": str(e)})
+                    print(f"Error get_products: {str(e)[:100]}")
+                    await envio_seguro(ws, {"error": "Error al obtener productos", "detail": str(e)[:200]})
+                continue
 
-            elif accion == "add_product":
+            if accion == "add_product":
                 producto = data.get("product")
-                # Logs adicionales para depuración
                 print("Producto a insertar (raw):", repr(producto), "tipo:", type(producto))
-                # Si el producto vino como string JSON, intentar parsearlo
                 if isinstance(producto, str):
                     try:
                         producto = json.loads(producto)
                         print("Producto parseado desde string:", producto)
                     except Exception:
-                        print("No se pudo parsear 'product' desde string; intentando insertar tal cual.")
+                        print("No se pudo parsear 'product' desde string")
 
-                # Normalizar claves a minúsculas para que coincidan con columnas en la BD (postgrest espera nombres en minúscula)
                 try:
                     producto_db = normalize_product_keys(producto)
-                    print("Producto normalizado para BD:", producto_db)
-                except Exception:
-                    producto_db = producto
+                    print("Producto normalizado:", producto_db)
+                    
+                    # Agregar valores por defecto para columnas NOT NULL faltantes
+                    if 'imagenURL' not in producto_db:
+                        producto_db['imagenURL'] = ''
+                    if 'stock' not in producto_db:
+                        producto_db['stock'] = 1
 
-                try:
-                    res = supabase.table("producto").insert(producto_db).execute()
-                    # Mostrar la respuesta completa para entender fallos
-                    try:
-                        # Algunos clientes exponen atributos distintos
-                        print("Respuesta insert -> data:", getattr(res, 'data', None), "status_code:", getattr(res, 'status_code', None), "error:", getattr(res, 'error', None))
-                    except Exception:
-                        print("Respuesta insert (repr):", repr(res))
-
-                    # Manejo de errores según la respuesta
-                    # Si res tiene atributo 'error' o no contiene data, avisar
-                    insert_data = None
-                    if hasattr(res, 'data'):
-                        insert_data = res.data
-
-                    if insert_data:
-                        await envio_seguro(ws, {"type": "add_product", "status": "success", "data": insert_data})
-                        # difundir a los demás
-                        await difundir({"type": "new_product", "data": insert_data}, excluir=ws)
+                    if db_conn:
+                        try:
+                            cur = db_conn.cursor(cursor_factory=RealDictCursor)
+                            cols = ", ".join(f'"{k}"' for k in producto_db.keys())  # Quoting para camelCase
+                            vals = ", ".join(["%s"] * len(producto_db))
+                            sql = f"INSERT INTO producto ({cols}) VALUES ({vals}) RETURNING *"
+                            print(f"SQL: {sql}")
+                            cur.execute(sql, tuple(producto_db.values()))
+                            db_conn.commit()
+                            resultado = cur.fetchone()
+                            datos = [convertir_para_json(dict(resultado))] if resultado else []
+                            
+                            if datos:
+                                await envio_seguro(ws, {"type": "add_product", "status": "success", "data": datos})
+                                await difundir({"type": "new_product", "data": datos}, excluir=ws)
+                            else:
+                                await envio_seguro(ws, {"error": "No se pudo insertar el producto"})
+                        except Exception as e:
+                            db_conn.rollback()  # Limpiar transacción en error
+                            raise
                     else:
-                        # Enviar detalle de error si existe
-                        detalle = getattr(res, 'error', None) or str(res)
-                        print("Insert no devolvió datos. detalle:", detalle)
-                        await envio_seguro(ws, {"error": "Inserción fallida", "detail": str(detalle)})
+                        await envio_seguro(ws, {"error": "No hay conexión a base de datos"})
 
                 except Exception as e:
-                    print("Error al insertar producto (excepción):", e)
+                    print(f"Error add_product: {e}")
                     traceback.print_exc()
-                    await envio_seguro(ws, {"error": str(e)})
+                    await envio_seguro(ws, {"error": f"Error al insertar: {str(e)[:200]}"})
 
             else:
                 await envio_seguro(ws, {"error": "Acción no reconocida"})
@@ -408,63 +415,29 @@ async def manejador(ws):
 
 
 async def main():
+    global db_conn
     puerto = int(os.getenv("WEBSOCKET_PORT", "8000"))
     host = os.getenv("WEBSOCKET_HOST", "localhost")
-    # Inicializar last_seen_id con el máximo id actual para no reenviar todo el histórico
+    
+    db_conn = get_db_connection()
+    
     global last_seen_id
     try:
-        # Intentar detectar la columna PK de la tabla `producto` y el último id
-        # 1) Intentar pedir información del esquema vía PostgREST (information_schema no está expuesto por REST, así que hacemos select a * y miramos keys)
-        resp = supabase.table("producto").select("*").limit(1).execute()
-        rows = getattr(resp, 'data', None) or []
-        detected_pk = None
-        if rows:
-            first = rows[0]
-            # Buscar una clave que contenga 'id' y parezca PK: prefer 'idproducto', 'id_producto', 'id'
-            for candidate in ['idproducto', 'id_producto', 'id', 'idProducto', 'idProducto'.lower()]:
-                if candidate in first:
-                    detected_pk = candidate
-                    break
-            if not detected_pk:
-                # buscar cualquier key que empiece o termine con 'id'
-                for k in first.keys():
-                    if k.lower().startswith('id') or k.lower().endswith('id'):
-                        detected_pk = k
-                        break
-
-            if detected_pk:
-                pk_column = detected_pk
-                # ahora obtener max id
-                try:
-                    # traer todos los ids (puede ser costoso en tablas grandes, por eso limitamos a obtener el max por SQL sería ideal)
-                    resp_all = supabase.table("producto").select(pk_column).execute()
-                    all_rows = getattr(resp_all, 'data', None) or []
-                    max_id = 0
-                    for r in all_rows:
-                        try:
-                            rid = int(r.get(pk_column))
-                            if rid > max_id:
-                                max_id = rid
-                        except Exception:
-                            continue
-                    last_seen_id = max_id
-                    print(f"pk_column detectada: {pk_column}, last_seen_id inicializado a {last_seen_id}")
-                except Exception as e:
-                    print("Error al obtener max id usando pk_column:", e)
-        else:
-            print("Tabla producto vacía o sin filas; last_seen_id se queda en 0")
+        if db_conn:
+            cur = db_conn.cursor()
+            cur.execute("SELECT MAX(\"idProducto\") FROM producto")
+            max_id = cur.fetchone()[0] or 0
+            last_seen_id = int(max_id)
+            print(f"✅ last_seen_id inicializado a {last_seen_id} desde PostgreSQL")
     except Exception as e:
-        print("No se pudo inicializar last_seen_id:", e)
+        print(f"Error inicializando last_seen_id: {e}")
 
     async with websockets.serve(manejador, host, puerto):
         print(f"✅ Servidor WebSocket corriendo en ws://{host}:{puerto}")
-        # Lanzar poller en background (backend-only realtime)
         asyncio.create_task(poller_realtime(poll_interval=int(os.getenv('POLL_INTERVAL', '5'))))
-        # Lanzar heartbeat para desconectar clientes inactivos
         asyncio.create_task(heartbeat_loop(ping_interval=int(os.getenv('PING_INTERVAL', '10')), ping_timeout=int(os.getenv('PING_TIMEOUT', '5'))))
         await asyncio.Future()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
