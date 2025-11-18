@@ -960,38 +960,29 @@
             orders: [],
             notifications: [],
             cart: [],
-            currentTab: 'dashboard'
+            currentTab: 'dashboard',
+            clientsOnline: 1  // Al menos estamos nosotros
         };
 
         // ========== WEBSOCKET ==========
         function connectWebSocket() {
             try {
-                console.log(`🔄 Intentando conectar a ${WS_URL}... (intento ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
-                addNotification(`🔄 Conectando al servidor...`, "warning");
+                console.log(`[CONECTANDO] Intentando conectar a ${WS_URL}... (intento ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+                addNotification(`[CONECTANDO] Conectando al servidor...`, "warning");
 
                 ws = new WebSocket(WS_URL);
 
                 ws.onopen = () => {
                     reconnectAttempts = 0;
                     updateConnectionStatus(true);
-                    console.log("✅ Conectado al WebSocket en " + WS_URL);
-                    addNotification("✅ Conectado al servidor WebSocket", "success");
+                    console.log("[CONECTADO] WebSocket conectado en " + WS_URL);
+                    addNotification("[CONECTADO] Servidor WebSocket activo", "success");
 
-                    // Inicializar cliente
-                    ws.send(JSON.stringify({
-                        action: "init",
-                        user_id: "user_" + Date.now(),
-                        emprendedor_id: "emp_" + Date.now()
-                    }));
+                    // Suscribirse a canal de productos
+                    ws.send(JSON.stringify({ action: "subscribe", channel: "productos" }));
 
-                    // Suscribirse a canales
-                    const channels = ["dashboard", "products:feed", "orders:feed", "notifications", "global"];
-                    channels.forEach(ch => {
-                        ws.send(JSON.stringify({ action: "subscribe", channel: ch }));
-                    });
-
-                    // Pedir estadísticas iniciales
-                    requestStats();
+                    // Cargar productos iniciales
+                    ws.send(JSON.stringify({ action: "get_products" }));
                 };
 
                 ws.onmessage = (event) => {
@@ -1004,49 +995,84 @@
                 };
 
                 ws.onerror = (error) => {
-                    console.error("❌ Error WebSocket:", error);
+                    console.error("[ERROR] WebSocket:", error);
                     updateConnectionStatus(false);
-                    addNotification("❌ Error en la conexión WebSocket", "error");
+                    addNotification("[ERROR] Conexión WebSocket fallida", "error");
                 };
 
                 ws.onclose = () => {
-                    console.log("❌ Conexión cerrada");
+                    console.log("[DESCONECTADO] Conexión cerrada");
                     updateConnectionStatus(false);
 
                     if (reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
                         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
-                        console.log(`🔄 Reintentando en ${delay}ms...`);
+                        console.log(`[REINTENTANDO] Reintentando en ${delay}ms...`);
                         reconnectTimeout = setTimeout(connectWebSocket, delay);
                     } else {
-                        console.error("❌ Máximo de intentos de reconexión alcanzado");
-                        addNotification("❌ No se pudo conectar al servidor. Verifique que esté corriendo.", "error");
+                        console.error("[ERROR] Máximo de intentos de reconexión alcanzado");
+                        addNotification("[ERROR] No se pudo conectar. Verifica que el servidor esté ejecutándose", "error");
                     }
                 };
 
             } catch (error) {
                 console.error("Error al crear WebSocket:", error);
-                addNotification("❌ Error al conectar: " + error.message, "error");
+                addNotification("[ERROR] Conexión fallida: " + error.message, "error");
             }
         }
 
         function handleMessage(message) {
-            if (message.type === "init:success" || message.type === "connection:established") {
-                clientId = message.client_id;
-                addNotification("✅ Conectado al servidor", "success");
+            console.log("Mensaje recibido:", message);
+
+            if (message.type === "subscribed") {
+                console.log("[SUSCRITO] Canal:", message.channel);
             }
 
             if (message.type === "stats") {
-                updateStats(message.data || message);
+                console.log("Stats recibidos:", message);
+                console.log("Total de clientes:", message.total_clients);
+                state.clientsOnline = message.total_clients;
+                document.getElementById("totalClients").textContent = state.clientsOnline;
+                console.log("[ACTUALIZADO] Contador de clientes:", state.clientsOnline);
             }
 
-            if (message.type === "message:received" && message.data) {
-                const event = message.data.event_type;
-                if (event === "product:added") {
-                    addProductToList(message.data.product);
-                } else if (event === "order:created") {
-                    addOrderToList(message.data.order);
-                }
+            if (message.type === "products") {
+                // Recibimos lista de productos
+                state.products = message.data.map((p, idx) => ({
+                    id: p.idProducto,
+                    nombre: p.nombreProducto,
+                    precio: parseFloat(p.precio),
+                    stock: p.stock,
+                    emoji: ""
+                }));
+                renderProducts();
+                updateStats({});
+            }
+
+            if (message.type === "add_product" && message.status === "success") {
+                // Nuevo producto agregado
+                const p = message.data[0];
+                const newProduct = {
+                    id: p.idProducto,
+                    nombre: p.nombreProducto,
+                    precio: parseFloat(p.precio),
+                    stock: p.stock,
+                    emoji: ""
+                };
+                addProductToList(newProduct);
+            }
+
+            if (message.type === "new_product") {
+                // Notificación de nuevo producto desde el poller
+                const p = message.data[0];
+                const newProduct = {
+                    id: p.idProducto,
+                    nombre: p.nombreProducto,
+                    precio: parseFloat(p.precio),
+                    stock: p.stock,
+                    emoji: ""
+                };
+                addProductToList(newProduct);
             }
         }
 
@@ -1057,10 +1083,10 @@
 
             if (connected) {
                 dot.classList.remove("offline");
-                text.textContent = "✅ Conectado";
+                text.textContent = "CONECTADO";
             } else {
                 dot.classList.add("offline");
-                text.textContent = "❌ Desconectado";
+                text.textContent = "DESCONECTADO";
             }
         }
 
@@ -1080,33 +1106,28 @@
             const stock = document.getElementById("productStock").value;
 
             if (!name || !price || !stock) {
-                addNotification("⚠️ Completa todos los campos", "warning");
+                addNotification("[ADVERTENCIA] Completa todos los campos", "warning");
                 return;
             }
 
-            const product = {
-                id: "prod_" + Date.now(),
-                nombre: name,
-                precio: parseFloat(price),
-                stock: parseInt(stock),
-                emoji: ["🖥️", "⌨️", "🖱️", "🎮", "📱", "📷", "🎧", "⌚"][Math.floor(Math.random() * 8)]
-            };
-
-            // Enviar por WebSocket pero NO agregar localmente
-            // El servidor retornará el evento y se agregará entonces
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
-                    action: "send_message",
-                    data: { event_type: "product:added", product }
+                    action: "add_product",
+                    product: {
+                        nombre: name,
+                        precio: parseFloat(price),
+                        stock: parseInt(stock),
+                        descripcion: "Producto desde marketplace"
+                    }
                 }));
 
                 // Limpiar formulario
                 document.getElementById("productName").value = "";
                 document.getElementById("productPrice").value = "";
                 document.getElementById("productStock").value = "";
-                addNotification("✅ Producto agregado exitosamente", "success");
+                addNotification("[EXITO] Producto agregado correctamente", "success");
             } else {
-                addNotification("❌ No estás conectado", "error");
+                addNotification("[ERROR] No estás conectado", "error");
             }
         }
 
@@ -1210,7 +1231,7 @@
                 state.cart.push({ id, name, price, cantidad: 1, emoji: state.products.find(p => p.id === id)?.emoji || "🛍️" });
             }
             renderCart();
-            addNotification(`✅ ${name} agregado al carrito`, "success");
+            addNotification(`[AGREGADO] ${name} añadido al carrito`, "success");
             document.getElementById("cartCount").textContent = state.cart.reduce((sum, i) => sum + i.cantidad, 0);
         }
 
@@ -1271,7 +1292,7 @@
                         <div class="order-date">${new Date().toLocaleString()}</div>
                     </div>
                     <div class="order-amount">$${(o.total || 0).toFixed(2)}</div>
-                    <div class="order-status ${o.estado || 'pending'}">${o.estado === 'completed' ? '✅ Completada' : o.estado === 'processing' ? '⏳ Procesando' : '📋 Pendiente'}</div>
+                    <div class="order-status ${o.estado || 'pending'}">${o.estado === 'completed' ? 'COMPLETADA' : o.estado === 'processing' ? 'PROCESANDO' : 'PENDIENTE'}</div>
                 </div>
             `).join("");
         }
@@ -1308,7 +1329,9 @@
         }
 
         function updateStats(data) {
-            document.getElementById("totalClients").textContent = data.total_clients || 0;
+            // Mostrar al menos 1 cliente (nosotros)
+            state.clientsOnline = Math.max(1, data.total_clients || 1);
+            document.getElementById("totalClients").textContent = state.clientsOnline;
             document.getElementById("totalProducts").textContent = state.products.length;
             document.getElementById("totalOrders").textContent = state.orders.length;
 
@@ -1319,13 +1342,13 @@
 
         function requestStats() {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ action: "get_stats" }));
+                ws.send(JSON.stringify({ action: "ping" }));
             }
         }
 
         function checkout() {
             if (state.cart.length === 0) {
-                addNotification("⚠️ Tu carrito está vacío", "warning");
+                addNotification("[ADVERTENCIA] Tu carrito está vacío", "warning");
                 return;
             }
 
@@ -1338,29 +1361,25 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Enviar por WebSocket pero NO agregar localmente
-            // El servidor retornará el evento y se agregará entonces
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    action: "send_message",
-                    data: { event_type: "order:created", order }
-                }));
+            // Registrar orden en state
+            addOrderToList(order);
 
-                // Limpiar carrito
-                state.cart = [];
-                renderCart();
-                document.getElementById("cartCount").textContent = "0";
-                toggleCart();
-                addNotification("✅ Orden procesada correctamente", "success");
-            } else {
-                addNotification("❌ No estás conectado", "error");
-            }
+            // Limpiar carrito
+            state.cart = [];
+            renderCart();
+            document.getElementById("cartCount").textContent = "0";
+            toggleCart();
+            addNotification("[EXITO] Orden procesada exitosamente", "success");
         }
 
         // ========== INICIALIZACIÓN ==========
         document.addEventListener("DOMContentLoaded", () => {
             connectWebSocket();
-            setInterval(requestStats, 5000);
+            // Actualizar stats cada 5 segundos
+            setInterval(() => {
+                updateStats({ total_clients: state.clientsOnline });
+            }, 5000);
+            // Enviar ping cada 30 segundos para mantener viva la conexión
             setInterval(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ action: "ping" }));

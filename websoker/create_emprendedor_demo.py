@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 
 from config import supabase
 
@@ -22,7 +22,7 @@ except Exception as e:
         import traceback; traceback.print_exc()
     except Exception:
         pass
-=======
+
 """Script robusto para asegurar que exista al menos un emprendedor de prueba.
 
 Funcionamiento:
@@ -93,4 +93,3 @@ def main():
 
 if __name__ == '__main__':
     main()
->>>>>>> cleanup/websoker-structure
