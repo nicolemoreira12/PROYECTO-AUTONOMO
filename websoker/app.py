@@ -174,7 +174,29 @@ async def heartbeat_loop(ping_interval: int = 10, ping_timeout: int = 5):
                 _cleanup_ws(ws)
 
 
+async def stats_broadcast_loop(interval: int = 2):
+    """Envía stats a todos los clientes cada X segundos"""
+    print(f"Iniciando broadcast de stats: interval={interval}s")
+    while True:
+        await asyncio.sleep(interval)
+        if clientes_conectados:
+            await difundir_estado()
+
+
+async def difundir_estado():
+    """Envia el estado actual a todos los clientes conectados"""
+    estado = {
+        "type": "stats",
+        "total_clients": len(clientes_conectados),
+        "total_channels": len(channel_subscriptions),
+        "timestamp": asyncio.get_event_loop().time()
+    }
+    print(f"📊 Difundiendo estado: {estado}")
+    await difundir(estado)
+
+
 async def difundir(mensaje: dict, excluir=None):
+    print(f"📤 Difundiendo a {len(clientes_conectados)} clientes: {mensaje.get('type')}")
     to_remove = []
     for cliente in list(clientes_conectados):
         if cliente == excluir:
@@ -274,6 +296,10 @@ async def poller_realtime(poll_interval: int = 5):
 async def manejador(ws):
     print(f"Cliente conectado: {ws.remote_address}")
     clientes_conectados.add(ws)
+    
+    # Notificar a todos que alguien se conectó
+    await difundir_estado()
+    
     try:
         async for mensaje in ws:
             print(f"Mensaje recibido de {ws.remote_address}: {repr(mensaje)}")
@@ -412,6 +438,13 @@ async def manejador(ws):
             print(f"Cliente desconectado: {ws.remote_address}")
         except Exception:
             print("Cliente desconectado: (dirección desconocida)")
+        
+        # Notificar a todos que alguien se desconectó
+        try:
+            loop = asyncio.get_event_loop()
+            loop.create_task(difundir_estado())
+        except Exception as e:
+            print(f"Error notificando desconexión: {e}")
 
 
 async def main():
@@ -436,6 +469,7 @@ async def main():
         print(f"✅ Servidor WebSocket corriendo en ws://{host}:{puerto}")
         asyncio.create_task(poller_realtime(poll_interval=int(os.getenv('POLL_INTERVAL', '5'))))
         asyncio.create_task(heartbeat_loop(ping_interval=int(os.getenv('PING_INTERVAL', '10')), ping_timeout=int(os.getenv('PING_TIMEOUT', '5'))))
+        asyncio.create_task(stats_broadcast_loop(interval=2))
         await asyncio.Future()
 
 
