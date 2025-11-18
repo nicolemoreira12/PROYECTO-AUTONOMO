@@ -40,7 +40,7 @@ app.use("/api/detallecarrito", detallecarritoRoutes);
 app.use("/api/detalleorden", detalleordenRoutes);
 app.use("/api/pagos", pagoRoutes);
 
-// Middleware de errores (debe ir al final)
+// Middleware de errores 
 app.use(errorHandler);
 
 AppDataSource.initialize()
