@@ -1,5 +1,7 @@
 import { AppDataSource } from "../config/data-source";
 import { Producto } from "../entities/Producto";
+import { pubsub, PRODUCT_ADDED } from "../graphql/pubsub";
+import { wsClient } from "./websocket.client";
 
 const productoRepo = AppDataSource.getRepository(Producto);
 
@@ -23,7 +25,20 @@ export class ProductoService {
 
   async create(data: Partial<Producto>) {
     const nuevo = productoRepo.create(data);
-    return await productoRepo.save(nuevo);
+    const saved = await productoRepo.save(nuevo);
+    // Publicar evento para GraphQL subscriptions
+    try {
+      pubsub.publish(PRODUCT_ADDED, { productAdded: saved });
+    } catch (e) {
+      console.warn("Could not publish PRODUCT_ADDED", e);
+    }
+    // Enviar al WebSocket externo si está conectado
+    try {
+      wsClient.addProduct(saved);
+    } catch (e) {
+      // no bloquear si falla WS
+    }
+    return saved;
   }
 
   async update(id: number, data: Partial<Producto>) {
@@ -34,7 +49,10 @@ export class ProductoService {
     }
     
     productoRepo.merge(producto, data);
-    return await productoRepo.save(producto);
+    const saved = await productoRepo.save(producto);
+    try { pubsub.publish(PRODUCT_ADDED, { productAdded: saved }); } catch {}
+    try { wsClient.updateProduct(String(id), saved); } catch {}
+    return saved;
   }
 
   async delete(id: number) {

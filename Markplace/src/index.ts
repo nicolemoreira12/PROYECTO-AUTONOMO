@@ -1,6 +1,12 @@
 import "dotenv/config";
 import "dotenv/config";
 import express from "express";
+import http from "http";
+import { WebSocketServer } from "ws";
+const useServer = (require("graphql-ws") as any).useServer || require("graphql-ws");
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import * as expressGraphql from "express-graphql";
+const graphqlHTTP = (expressGraphql as any).graphqlHTTP || expressGraphql;
 import { AppDataSource } from "./config/data-source";
 import { errorHandler } from "./middlewares/error.middleware";
 import authRoutes from "./routes/Auth.routes";
@@ -16,6 +22,8 @@ import detallecarritoRoutes from "./routes/Dellatecarrito.routes";
 import detalleordenRoutes from "./routes/DetalleOrden.routes";
 import pagoRoutes from "./routes/Pago.routes";
 import reportesRoutes from "./routes/Reportes.routes";
+import { typeDefs, resolvers } from "./graphql/schema";
+import { pubsub } from "./graphql/pubsub";
 
 
 const app = express();
@@ -44,10 +52,23 @@ app.use("/api/pagos", pagoRoutes);
 app.use(errorHandler);
 
 AppDataSource.initialize()
-  .then(() => {
+  .then(async () => {
     console.log("📦 Conectado a la base de datos");
-    app.listen(3000, () => {
-      console.log("🚀 Servidor corriendo en http://localhost:3000");
+
+    // Montar GraphQL HTTP (queries y mutations)
+    const schema = makeExecutableSchema({ typeDefs, resolvers } as any);
+    app.use(
+      "/graphql",
+      graphqlHTTP({
+        schema,
+        graphiql: true,
+      })
+    );
+
+    const PORT = Number(process.env.PORT) || 3000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`📡 GraphQL endpoint (GraphiQL): http://localhost:${PORT}/graphql`);
     });
   })
   .catch((error) => console.error("❌ Error de conexión:", error));

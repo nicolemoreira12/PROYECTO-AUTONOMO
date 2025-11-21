@@ -1,5 +1,7 @@
 import { AppDataSource } from "../config/data-source";
 import { Orden } from "../entities/Orden";
+import { pubsub, ORDER_CREATED } from "../graphql/pubsub";
+import { wsClient } from "./websocket.client";
 
 const ordenRepo = AppDataSource.getRepository(Orden);
 
@@ -23,7 +25,10 @@ export class OrdenService {
 
   async create(data: Partial<Orden>) {
     const nuevo = ordenRepo.create(data);
-    return await ordenRepo.save(nuevo);
+    const saved = await ordenRepo.save(nuevo);
+    try { pubsub.publish(ORDER_CREATED, { orderCreated: saved }); } catch (e) { console.warn(e); }
+    try { wsClient.createOrder(saved); } catch (e) { }
+    return saved;
   } 
 
   async update(id: number, data: Partial<Orden>) {
@@ -34,7 +39,10 @@ export class OrdenService {
     }
     
     ordenRepo.merge(orden, data);
-    return await ordenRepo.save(orden);
+    const saved = await ordenRepo.save(orden);
+    try { pubsub.publish(ORDER_CREATED, { orderCreated: saved }); } catch {}
+    try { wsClient.updateOrder(String(id), saved); } catch {}
+    return saved;
   } 
   
   async delete(id: number) {
