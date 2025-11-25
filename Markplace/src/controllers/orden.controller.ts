@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { OrdenService} from "../services/orden.service";
+import { OrdenService } from "../services/orden.service";
 
 const service = new OrdenService();
 
@@ -28,8 +28,12 @@ export class OrdenController {
     try {
       const nuevaOrden = await service.create(req.body);
       res.status(201).json(nuevaOrden);
-    } catch (err) {
-      res.status(400).json({ error: "Error al crear orden" });
+    } catch (err: any) {
+      console.error("Error al crear orden:", err.message || err);
+      res.status(400).json({
+        error: "Error al crear orden",
+        details: err.message || "Error desconocido"
+      });
     }
   }
 
