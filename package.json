@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "graphql-type-json": "^0.3.2"
   }
 }

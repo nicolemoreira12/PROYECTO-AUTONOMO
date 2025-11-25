@@ -23,6 +23,8 @@ export const AppDataSource = new DataSource({
   logging: true,
   // Configuración SSL para Supabase (requerido para conexiones remotas)
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  // A veces los poolers (ej. Supabase) requieren pasar ssl también en `extra` para el cliente pg
+  extra: process.env.DB_SSL === "true" ? { ssl: { rejectUnauthorized: false } } : undefined,
   entities: [
     Usuario,
     Producto,
