@@ -27,7 +27,7 @@ class WebSocketServer:
         self.message_handler = MessageHandler(self.connections, self.database)
         self.background = BackgroundTasks(self.connections, self.database)
     
-    async def client_handler(self, ws, path: str) -> None:
+    async def client_handler(self, ws) -> None:
         """Maneja un cliente conectado"""
         try:
             # Agregar cliente
