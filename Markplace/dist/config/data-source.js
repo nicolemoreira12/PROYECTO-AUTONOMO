@@ -18,9 +18,9 @@ exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
     host: "db.rvyietphxsbrrehlaeji.supabase.co",
     port: 5432,
-    username: "postgres",
-    password: "12099441226n",
-    database: "postgres",
+    username: "postgres.rvyietphxsbrrehlaeji",
+    password: "XNxVcxgoKwhzv60G",
+    database: "aws-1-us-east-1.pooler.supabase.com",
     synchronize: true,
     logging: true,
     entities: [

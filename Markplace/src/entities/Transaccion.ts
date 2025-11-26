@@ -6,12 +6,12 @@ export class Transaccion {
   @PrimaryGeneratedColumn()
   idTransaccion!: number;
 
-  @ManyToOne(() => TarjetaVirtual, (tarjeta) => tarjeta.transacciones)
+  @ManyToOne(() => TarjetaVirtual, (tarjeta) => tarjeta.transacciones, { nullable: true })
   @JoinColumn({ name: "idTarjeta" })
-  tarjeta!: TarjetaVirtual;
+  tarjeta?: TarjetaVirtual;
 
-  @Column()
-  idTarjeta!: number;
+  @Column({ nullable: true })
+  idTarjeta?: number;
 
   @Column({ type: "decimal", precision: 10, scale: 2 })
   monto!: number;
