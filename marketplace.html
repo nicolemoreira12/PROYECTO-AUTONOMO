@@ -1039,6 +1039,10 @@
                     <i class="fas fa-chart-bar"></i>
                     Mis Ventas
                 </div>
+                <div class="sidebar-item" onclick="switchTab('tarjeta')">
+                    <i class="fas fa-credit-card"></i>
+                    Tarjeta Virtual
+                </div>
                 <div class="sidebar-item" onclick="switchTab('notificaciones')">
                     <i class="fas fa-bell"></i>
                     Notificaciones
@@ -1139,6 +1143,22 @@
 
                     <div class="card">
                         <h3>Catálogo de Productos</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group" style="margin: 0;">
+                                <input type="text" id="filterProductName" placeholder="🔍 Filtrar por nombre..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <select id="filterProductSort" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="name">Ordenar por Nombre</option>
+                                    <option value="price-asc">Precio: Menor a Mayor</option>
+                                    <option value="price-desc">Precio: Mayor a Menor</option>
+                                    <option value="stock">Stock</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" onclick="filterProducts()" style="width: 100%;">
+                                <i class="fas fa-filter"></i> Aplicar Filtro
+                            </button>
+                        </div>
                         <div id="productsList" class="products-grid"></div>
                     </div>
                 </div>
@@ -1166,6 +1186,20 @@
                 <div id="historial" class="tab-content">
                     <div class="card">
                         <h3>Mis Compras</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                            <button class="btn-primary" onclick="filterOrdersByStatus('todos')" style="width: 100%;">
+                                Ver Todas
+                            </button>
+                            <button class="btn-primary" onclick="filterOrdersByStatus('COMPLETADA')" style="width: 100%; background: #4CAF50;">
+                                Completadas
+                            </button>
+                            <button class="btn-primary" onclick="filterOrdersByStatus('PENDIENTE')" style="width: 100%; background: #FF9800;">
+                                Pendientes
+                            </button>
+                            <button class="btn-primary" onclick="filterOrdersByStatus('cancelada')" style="width: 100%; background: #f44336;">
+                                Canceladas
+                            </button>
+                        </div>
                         <div id="historialList" class="orders-list"></div>
                     </div>
                 </div>
@@ -1183,6 +1217,82 @@
                     <div class="card">
                         <h3>Mis Ventas</h3>
                         <div id="vendedorContent"></div>
+                    </div>
+                </div>
+
+                <!-- TARJETA VIRTUAL TAB -->
+                <div id="tarjeta" class="tab-content">
+                    <div class="card">
+                        <h3>💳 Tarjeta Virtual</h3>
+                        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 10px; color: white; margin-bottom: 20px; position: relative; overflow: hidden; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <!-- Decoración -->
+                            <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                            
+                            <!-- Contenido -->
+                            <div style="position: relative; z-index: 1;">
+                                <p style="margin: 0; opacity: 0.8; font-size: 12px;">NÚMERO DE TARJETA</p>
+                                <h2 style="margin: 10px 0; font-size: 24px; letter-spacing: 2px;">●●●● ●●●● ●●●● ●●●●</h2>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1;">
+                                <div>
+                                    <p style="margin: 0; opacity: 0.8; font-size: 10px;">VENCIMIENTO</p>
+                                    <p style="margin: 5px 0; font-size: 14px; font-weight: bold;">MM/YY</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <p style="margin: 0; opacity: 0.8; font-size: 10px;">CVV</p>
+                                    <p style="margin: 5px 0; font-size: 14px; font-weight: bold;">•••</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <p style="margin: 0; color: #856404; font-weight: bold;">
+                                <i class="fas fa-info-circle"></i> Esta funcionalidad aún no está disponible
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #856404; font-size: 13px;">
+                                Estamos trabajando en integrar un sistema seguro de tarjeta virtual. Pronto podrás crear, gestionar y usar tu tarjeta virtual para realizar compras. 🚀
+                            </p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">SALDO DISPONIBLE</p>
+                                <h3 style="margin: 10px 0 0 0; color: #333;">$0.00</h3>
+                            </div>
+                            <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">LÍMITE</p>
+                                <h3 style="margin: 10px 0 0 0; color: #333;">$5,000.00</h3>
+                            </div>
+                        </div>
+
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <h4 style="margin: 0 0 15px 0;">📋 Funcionalidades Próximas:</h4>
+                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Crear tarjeta virtual desechable
+                                </li>
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Recargar saldo desde tu cuenta
+                                </li>
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Establecer límites de gasto
+                                </li>
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Historial de transacciones
+                                </li>
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Seguridad avanzada 3D Secure
+                                </li>
+                                <li style="margin: 8px 0; color: #666; font-size: 14px;">
+                                    <span style="color: #667eea; font-weight: bold;">✓</span> Bloqueo/Desbloqueo instantáneo
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button class="btn-primary" onclick="notifyTarjetaVirtual()" style="width: 100%; opacity: 0.6; cursor: not-allowed;">
+                            <i class="fas fa-lock"></i> Crear Tarjeta Virtual (Próximamente)
+                        </button>
                     </div>
                 </div>
 
@@ -1382,9 +1492,22 @@
             if (message.type === "stats") {
                 console.log("Stats recibidos:", message);
                 console.log("Total de clientes:", message.total_clients);
-                state.clientsOnline = message.total_clients;
-                document.getElementById("totalClients").textContent = state.clientsOnline;
-                console.log("[ACTUALIZADO] Contador de clientes:", state.clientsOnline);
+                
+                // Asegurar que al menos mostramos 1 cliente (nosotros)
+                // y limitamos a un máximo realista basado en el servidor
+                let clientCount = Math.max(1, Math.min(message.total_clients || 1, 1000));
+                
+                // Solo actualizar si cambió significativamente o si es la primera vez
+                if (!state.clientsOnline || Math.abs(clientCount - state.clientsOnline) >= 1) {
+                    state.clientsOnline = clientCount;
+                    document.getElementById("totalClients").textContent = state.clientsOnline;
+                    console.log("[ACTUALIZADO] Contador de clientes:", state.clientsOnline);
+                }
+                
+                // Actualizar dashboard si está activo
+                if (state.currentTab === "dashboard") {
+                    updateRecentActivity();
+                }
             }
 
             if (message.type === "products") {
@@ -1398,6 +1521,11 @@
                 }));
                 renderProducts();
                 updateStats({});
+                
+                // Actualizar dashboard
+                if (state.currentTab === "dashboard") {
+                    updateRecentActivity();
+                }
             }
 
             if (message.type === "add_product" && message.status === "success") {
@@ -1411,6 +1539,12 @@
                     emoji: ""
                 };
                 addProductToList(newProduct);
+                
+                // Actualizar dashboard
+                updateStats({});
+                if (state.currentTab === "dashboard") {
+                    updateRecentActivity();
+                }
             }
 
             if (message.type === "new_product") {
@@ -1424,6 +1558,12 @@
                     emoji: ""
                 };
                 addProductToList(newProduct);
+                
+                // Actualizar dashboard
+                updateStats({});
+                if (state.currentTab === "dashboard") {
+                    updateRecentActivity();
+                }
             }
         }
 
@@ -1457,9 +1597,15 @@
                 loadPerfil();
             } else if (tabName === "vendedor") {
                 loadVendedorDashboard();
+            } else if (tabName === "tarjeta") {
+                // La tarjeta se carga automáticamente, aquí podría ir lógica adicional
             } else if (tabName === "analytics") {
                 // Se carga manualmente con el botón
             }
+        }
+
+        function notifyTarjetaVirtual() {
+            addNotification("[INFO] 🚀 Tarjeta Virtual próximamente disponible. ¡Mantente atento a las actualizaciones!", "warning");
         }
 
         function addProduct() {
@@ -1497,6 +1643,11 @@
             state.products.push(product);
             renderProducts();
             updateStats({});
+            
+            // Actualizar dashboard si está activo
+            if (state.currentTab === "dashboard") {
+                updateRecentActivity();
+            }
         }
 
         function renderProducts() {
@@ -1650,11 +1801,11 @@
             list.innerHTML = state.orders.map(o => `
                 <div class="order-item">
                     <div class="order-info">
-                        <h4>Orden #${o.id.substring(0, 8)}</h4>
-                        <div class="order-date">${new Date().toLocaleString()}</div>
+                        <h4>Orden #${o.id ? String(o.id).substring(0, 8) : 'N/A'}</h4>
+                        <div class="order-date">${o.timestamp ? new Date(o.timestamp).toLocaleString() : new Date().toLocaleString()}</div>
                     </div>
                     <div class="order-amount">$${(o.total || 0).toFixed(2)}</div>
-                    <div class="order-status ${o.estado || 'pending'}">${o.estado === 'completed' ? 'COMPLETADA' : o.estado === 'processing' ? 'PROCESANDO' : 'PENDIENTE'}</div>
+                    <div class="order-status ${o.estado || 'pending'}">${o.estado === 'completado' || o.estado === 'completed' ? 'COMPLETADA' : o.estado === 'processing' ? 'PROCESANDO' : 'PENDIENTE'}</div>
                 </div>
             `).join("");
         }
@@ -1700,6 +1851,48 @@
             // Calcular ingresos totales desde las órdenes
             const totalRevenue = state.orders.reduce((sum, order) => sum + (order.total || 0), 0);
             document.getElementById("totalRevenue").textContent = "$" + totalRevenue.toFixed(2);
+
+            // Actualizar actividad reciente
+            updateRecentActivity();
+        }
+
+        function updateRecentActivity() {
+            const recentList = document.getElementById("recentActivityList");
+            
+            if (!recentList) return;
+
+            let recentOrders = state.orders ? state.orders.slice(-5).reverse() : [];
+            
+            if (recentOrders.length === 0) {
+                recentList.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 No hay actividad reciente</div>';
+                return;
+            }
+
+            recentList.innerHTML = recentOrders.map((order, idx) => {
+                const fecha = order.timestamp ? new Date(order.timestamp).toLocaleString("es-ES") : new Date().toLocaleString("es-ES");
+                const estado = order.estado || "PENDIENTE";
+                const metodoPago = order.metodoPago || "N/A";
+                const ordenId = order.id ? String(order.id).substring(0, 8) : "N/A";
+                
+                const estadoColor = estado === "COMPLETADA" || estado === "completado" ? "#4CAF50" : "#FF9800";
+                const isNew = idx === 0; // Primera orden es la más nueva
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; border-radius: 3px; margin-bottom: 8px; background: ${isNew ? '#f0f9ff' : 'white'}; border-left: ${isNew ? '4px solid #667eea' : '4px solid transparent'}; animation: ${isNew ? 'slideIn 0.5s ease-out' : 'none'};">
+                        <div>
+                            <strong>Orden #${ordenId}</strong>
+                            <p style="margin: 3px 0; font-size: 12px; color: #999;">${fecha}</p>
+                            <p style="margin: 3px 0; font-size: 12px; color: #666;">💳 ${metodoPago}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="background: ${estadoColor}; color: white; padding: 5px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">
+                                ${estado.toUpperCase()}
+                            </div>
+                            <div style="color: #667eea; font-weight: bold; font-size: 14px;">$${order.total.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
 
         function requestStats() {
@@ -1722,57 +1915,211 @@
 
             const total = state.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
-            // Crear orden para guardar en BD
+            // Mostrar modal de pago
+            showPaymentModal(total);
+        }
+
+        function showPaymentModal(total) {
+            // Crear modal si no existe
+            let modal = document.getElementById('paymentModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'paymentModal';
+                modal.innerHTML = `
+                    <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 50px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <h2 style="margin-bottom: 20px; color: #333;">Método de Pago</h2>
+                        <div id="paymentMessage" style="margin-bottom: 15px;"></div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Selecciona método de pago:</label>
+                            <select id="paymentMethod" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="tarjeta">💳 Tarjeta de Crédito</option>
+                                <option value="transferencia">🏦 Transferencia Bancaria</option>
+                                <option value="paypal">🅿️ PayPal</option>
+                            </select>
+                        </div>
+
+                        <div id="cardPaymentForm" style="display: none;">
+                            <h4>Datos de Tarjeta</h4>
+                            <input type="text" id="cardNumber" placeholder="Número de tarjeta (16 dígitos)" maxlength="19" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px;">
+                            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px;">
+                            <input type="text" id="cardCVV" placeholder="CVV (3-4 dígitos)" maxlength="4" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px;">
+                            <input type="text" id="cardHolder" placeholder="Titular de la tarjeta" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+
+                        <div id="transferPaymentForm" style="display: none;">
+                            <h4>Datos de Transferencia</h4>
+                            <p><strong>Banco:</strong> Banco Principal</p>
+                            <p><strong>Cuenta:</strong> 1234567890</p>
+                            <p><strong>Concepto:</strong> Orden Marketplace</p>
+                            <p style="color: #666;">Confirma tu transferencia una vez realizada</p>
+                        </div>
+
+                        <div id="paypalPaymentForm" style="display: none;">
+                            <h4>PayPal</h4>
+                            <p style="color: #666;">Serás redirigido a PayPal para completar el pago</p>
+                        </div>
+
+                        <div style="margin-top: 20px; text-align: center;">
+                            <p style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">Total: $${total.toFixed(2)}</p>
+                            <button onclick="processPayment(${total})" style="background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">Pagar Ahora</button>
+                            <button onclick="closePaymentModal()" style="background: #ccc; color: black; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Cancelar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.style.cssText = 'display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+            }
+
+            // Mostrar modal
+            modal.style.display = 'block';
+
+            // Listener para cambio de método
+            const methodSelect = document.getElementById('paymentMethod');
+            methodSelect.onchange = (e) => {
+                document.getElementById('cardPaymentForm').style.display = e.target.value === 'tarjeta' ? 'block' : 'none';
+                document.getElementById('transferPaymentForm').style.display = e.target.value === 'transferencia' ? 'block' : 'none';
+                document.getElementById('paypalPaymentForm').style.display = e.target.value === 'paypal' ? 'block' : 'none';
+            };
+
+            // Auto-formateo de tarjeta
+            const cardInput = document.getElementById('cardNumber');
+            if (cardInput) {
+                cardInput.oninput = (e) => {
+                    let value = e.target.value.replace(/\s+/g, '');
+                    e.target.value = value.match(/.{1,4}/g)?.join(' ') || value;
+                };
+            }
+
+            // Auto-formateo de fecha
+            const expiryInput = document.getElementById('cardExpiry');
+            if (expiryInput) {
+                expiryInput.oninput = (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                    }
+                    e.target.value = value;
+                };
+            }
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function addOrderToList(order) {
+            // Esta función simplemente actualiza la lista de órdenes
+            renderOrders();
+        }
+
+        async function processPayment(total) {
+            const messageDiv = document.getElementById('paymentMessage');
+            const method = document.getElementById('paymentMethod').value;
+
+            if (!method) {
+                messageDiv.textContent = '[ERROR] Selecciona un método de pago';
+                messageDiv.style.color = '#ef4444';
+                return;
+            }
+
+            let isValid = true;
+
+            if (method === 'tarjeta') {
+                const card = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+                const expiry = document.getElementById('cardExpiry').value;
+                const cvv = document.getElementById('cardCVV').value;
+                const holder = document.getElementById('cardHolder').value.trim();
+
+                if (card.length !== 16 || !/^\d+$/.test(card)) {
+                    messageDiv.textContent = '[ERROR] Tarjeta: 16 dígitos requeridos';
+                    messageDiv.style.color = '#ef4444';
+                    isValid = false;
+                }
+                if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+                    messageDiv.textContent = '[ERROR] Fecha: formato MM/YY requerido';
+                    messageDiv.style.color = '#ef4444';
+                    isValid = false;
+                }
+                if (cvv.length < 3 || cvv.length > 4 || !/^\d+$/.test(cvv)) {
+                    messageDiv.textContent = '[ERROR] CVV: 3-4 dígitos requeridos';
+                    messageDiv.style.color = '#ef4444';
+                    isValid = false;
+                }
+                if (!holder || holder.length < 3) {
+                    messageDiv.textContent = '[ERROR] Titular: nombre requerido';
+                    messageDiv.style.color = '#ef4444';
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) return;
+
+            messageDiv.textContent = 'Procesando pago...';
+            messageDiv.style.color = '#f59e0b';
+
             const orderData = {
                 usuarioIdUsuario: state.user.idUsuario,
                 total: total,
-                estado: "pendiente"
+                estado: "completado",
+                metodoPago: method
             };
 
-            // Enviar orden al servidor
-            fetch(`${API_URL}/api/orden`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${state.token}`
-                },
-                body: JSON.stringify(orderData)
-            })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`Error ${res.status}: ${res.statusText}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.idOrden) {
-                        // Guardar en state también
-                        const order = {
-                            id: data.idOrden,
-                            items: state.cart,
-                            total: total,
-                            estado: "pendiente",
-                            timestamp: new Date().toISOString(),
-                            usuario: state.user.nombre
-                        };
-
-                        if (!state.orders) state.orders = [];
-                        state.orders.push(order);
-
-                        addOrderToList(order);
-                        state.cart = [];
-                        renderCart();
-                        document.getElementById("cartCount").textContent = "0";
-                        toggleCart();
-                        addNotification("[EXITO] Orden creada exitosamente", "success");
-                    } else {
-                        addNotification("[ERROR] Error al crear la orden: " + JSON.stringify(data), "error");
-                    }
-                })
-                .catch(err => {
-                    console.error('Checkout error:', err);
-                    addNotification("[ERROR] Error al procesar orden: " + err.message, "error");
+            try {
+                const response = await fetch(`${API_URL}/api/orden`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify(orderData)
                 });
+
+                const data = await response.json();
+
+                if (response.ok && data.idOrden) {
+                    const order = {
+                        id: data.idOrden,
+                        items: state.cart.slice(),
+                        total: total,
+                        estado: "completado",
+                        metodoPago: method,
+                        timestamp: new Date().toISOString(),
+                        usuario: state.user.nombre
+                    };
+
+                    if (!state.orders) state.orders = [];
+                    state.orders.push(order);
+
+                    addOrderToList(order);
+                    state.cart = [];
+                    renderCart();
+                    document.getElementById("cartCount").textContent = "0";
+
+                    messageDiv.textContent = '[EXITO] ¡Orden completada!';
+                    messageDiv.style.color = '#22c55e';
+
+                    // Actualizar estadísticas y dashboard
+                    updateStats({});
+                    if (state.currentTab === "dashboard") {
+                        updateRecentActivity();
+                    }
+
+                    setTimeout(() => {
+                        closePaymentModal();
+                        addNotification("[EXITO] Orden completada exitosamente", "success");
+                    }, 1000);
+                } else {
+                    messageDiv.textContent = '[ERROR] ' + (data.message || 'Error al procesar orden');
+                    messageDiv.style.color = '#ef4444';
+                }
+            } catch (error) {
+                messageDiv.textContent = '[ERROR] Error de conexión: ' + error.message;
+                messageDiv.style.color = '#ef4444';
+                console.error('Payment error:', error);
+            }
         }
 
         // ========== AUTENTICACIÓN ==========
@@ -1804,13 +2151,27 @@
 
         async function handleLogin(event) {
             event.preventDefault();
-            const email = document.getElementById("loginEmail").value;
+            const email = document.getElementById("loginEmail").value.trim();
             const password = document.getElementById("loginPassword").value;
             const btn = document.getElementById("loginBtn");
             const messageDiv = document.getElementById("loginMessage");
 
+            // Validaciones
+            if (!email || !email.includes("@")) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Email inválido";
+                return;
+            }
+
+            if (!password || password.length < 1) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Contraseña requerida";
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = "Verificando...";
+            messageDiv.textContent = "";
 
             try {
                 const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -1821,7 +2182,7 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.usuario && data.token) {
                     // Guardar usuario y token
                     state.user = data.usuario;
                     state.token = data.token;
@@ -1831,16 +2192,19 @@
                     messageDiv.className = "auth-message success";
                     messageDiv.textContent = "[EXITO] Sesión iniciada correctamente";
 
-                    updateUserUI();
-                    closeAuthModal();
-                    addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                    setTimeout(() => {
+                        updateUserUI();
+                        closeAuthModal();
+                        addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                    }, 500);
                 } else {
                     messageDiv.className = "auth-message error";
                     messageDiv.textContent = "[ERROR] " + (data.message || "Credenciales inválidas");
                 }
             } catch (error) {
                 messageDiv.className = "auth-message error";
-                messageDiv.textContent = "[ERROR] Error de conexión: " + error.message;
+                messageDiv.textContent = "[ERROR] Conexión: " + error.message;
+                console.error("Login error:", error);
             } finally {
                 btn.disabled = false;
                 btn.textContent = "Iniciar Sesión";
@@ -1852,18 +2216,52 @@
             const btn = document.getElementById("registerBtn");
             const messageDiv = document.getElementById("registerMessage");
 
-            const userData = {
-                nombre: document.getElementById("registerNombre").value,
-                apellido: document.getElementById("registerApellido").value,
-                email: document.getElementById("registerEmail").value,
-                contrasena: document.getElementById("registerPassword").value,
-                direccion: document.getElementById("registerDireccion").value || "No especificado",
-                telefono: document.getElementById("registerTelefono").value || "No especificado",
-                rol: "usuario"
-            };
+            // Obtener valores
+            const nombre = document.getElementById("registerNombre").value.trim();
+            const apellido = document.getElementById("registerApellido").value.trim();
+            const email = document.getElementById("registerEmail").value.trim();
+            const contrasena = document.getElementById("registerPassword").value;
+            const direccion = document.getElementById("registerDireccion").value.trim() || "No especificado";
+            const telefono = document.getElementById("registerTelefono").value.trim() || "No especificado";
+
+            // Validaciones
+            if (!nombre || nombre.length < 2) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Nombre debe tener al menos 2 caracteres";
+                return;
+            }
+
+            if (!apellido || apellido.length < 2) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Apellido debe tener al menos 2 caracteres";
+                return;
+            }
+
+            if (!email || !email.includes("@")) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Email inválido";
+                return;
+            }
+
+            if (!contrasena || contrasena.length < 6) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Contraseña debe tener al menos 6 caracteres";
+                return;
+            }
 
             btn.disabled = true;
             btn.textContent = "Registrando...";
+            messageDiv.textContent = "";
+
+            const userData = {
+                nombre: nombre,
+                apellido: apellido,
+                email: email,
+                contrasena: contrasena,
+                direccion: direccion,
+                telefono: telefono,
+                rol: "usuario"
+            };
 
             try {
                 const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -1874,7 +2272,7 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.usuario && data.token) {
                     // Auto login
                     state.user = data.usuario;
                     state.token = data.token;
@@ -1884,16 +2282,19 @@
                     messageDiv.className = "auth-message success";
                     messageDiv.textContent = "[EXITO] Cuenta creada correctamente";
 
-                    updateUserUI();
-                    closeAuthModal();
-                    addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                    setTimeout(() => {
+                        updateUserUI();
+                        closeAuthModal();
+                        addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                    }, 500);
                 } else {
                     messageDiv.className = "auth-message error";
                     messageDiv.textContent = "[ERROR] " + (data.message || "Error al registrar");
                 }
             } catch (error) {
                 messageDiv.className = "auth-message error";
-                messageDiv.textContent = "[ERROR] Error de conexión: " + error.message;
+                messageDiv.textContent = "[ERROR] Conexión: " + error.message;
+                console.error("Register error:", error);
             } finally {
                 btn.disabled = false;
                 btn.textContent = "Registrarse";
@@ -1933,32 +2334,71 @@
                 return;
             }
 
+            // Primero mostrar órdenes locales
+            if (state.orders && state.orders.length > 0) {
+                let html = '';
+                state.orders.forEach(order => {
+                    html += `
+                        <div class="order-item" style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>Orden #${order.id ? String(order.id).substring(0, 8) : 'N/A'}</strong>
+                                    <p style="margin: 5px 0; font-size: 12px; color: #666;">Método: ${order.metodoPago || 'No especificado'}</p>
+                                </div>
+                                <span style="background: ${order.estado === 'completado' || order.estado === 'completed' ? '#22c55e' : '#f59e0b'}; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px;">
+                                    ${order.estado === 'completado' || order.estado === 'completed' ? 'COMPLETADA' : 'PENDIENTE'}
+                                </span>
+                            </div>
+                            <p style="margin: 5px 0; font-weight: bold;">Total: $${(order.total || 0).toFixed(2)}</p>
+                            <p style="margin: 5px 0; font-size: 12px; color: #666;">Fecha: ${order.timestamp ? new Date(order.timestamp).toLocaleDateString() : 'N/A'}</p>
+                            <div style="margin-top: 10px; font-size: 12px;">
+                                <strong>Productos:</strong>
+                                <ul style="margin: 5px 0; padding-left: 20px;">
+                                    ${order.items && order.items.length > 0
+                            ? order.items.map(item => `<li>${item.nombre} x${item.cantidad}</li>`).join('')
+                            : '<li>Sin ítems registrados</li>'
+                        }
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById("historialList").innerHTML = html;
+            } else {
+                document.getElementById("historialList").innerHTML = '<p style="text-align: center; color: #999;">No tienes órdenes aún</p>';
+            }
+
+            // Intentar obtener órdenes del servidor también
             fetch(`${API_URL}/api/orden`, {
                 headers: { 'Authorization': `Bearer ${state.token}` }
             })
                 .then(res => res.json())
                 .then(data => {
-                    let html = '';
                     if (Array.isArray(data) && data.length > 0) {
+                        let html = '';
                         data.forEach(order => {
                             html += `
-                            <div class="order-item" style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <strong>Orden #${order.idOrden}</strong>
-                                    <span style="background: #667eea; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px;">${order.estado}</span>
+                                <div class="order-item" style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <strong>Orden #${order.idOrden}</strong>
+                                        <span style="background: #667eea; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px;">${order.estado}</span>
+                                    </div>
+                                    <p style="margin: 5px 0;">Total: $${order.total.toFixed(2)}</p>
+                                    <p style="margin: 5px 0; font-size: 12px; color: #666;">Fecha: ${new Date(order.fechaOrden).toLocaleDateString()}</p>
                                 </div>
-                                <p style="margin: 5px 0;">Total: $${order.total.toFixed(2)}</p>
-                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Fecha: ${new Date(order.fechaOrden).toLocaleDateString()}</p>
-                            </div>
-                        `;
+                            `;
                         });
-                    } else {
-                        html = '<p style="text-align: center; color: #999;">No tienes órdenes aún</p>';
+                        // Combinar con órdenes locales
+                        const existingHtml = document.getElementById("historialList").innerHTML;
+                        if (!existingHtml.includes("No tienes órdenes")) {
+                            document.getElementById("historialList").innerHTML = existingHtml + html;
+                        } else {
+                            document.getElementById("historialList").innerHTML = html;
+                        }
                     }
-                    document.getElementById("historialList").innerHTML = html;
                 })
                 .catch(err => {
-                    document.getElementById("historialList").innerHTML = `<p>[ERROR] ${err.message}</p>`;
+                    console.error("Error cargando órdenes del servidor:", err);
                 });
         }
 
@@ -1970,23 +2410,189 @@
             }
 
             const user = state.user;
+            const totalCompras = state.orders ? state.orders.length : 0;
+            const totalGastado = state.orders ? state.orders.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
+
             const html = `
-                <div style="max-width: 500px;">
-                    <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-                        <p><strong>Nombre:</strong> ${user.nombre} ${user.apellido || ''}</p>
-                        <p><strong>Email:</strong> ${user.email}</p>
-                        <p><strong>Teléfono:</strong> ${user.telefono || 'No especificado'}</p>
-                        <p><strong>Dirección:</strong> ${user.direccion || 'No especificado'}</p>
-                        <p><strong>Rol:</strong> ${user.rol}</p>
+                <div style="max-width: 600px;">
+                    <!-- Estadísticas -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Compras Realizadas</p>
+                            <h3 style="margin: 10px 0 0 0;">${totalCompras}</h3>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Gastado</p>
+                            <h3 style="margin: 10px 0 0 0;">$${totalGastado.toFixed(2)}</h3>
+                        </div>
                     </div>
-                    <button class="btn-login" onclick="editarPerfil()" style="width: 100%; padding: 12px;">Editar Perfil</button>
+
+                    <!-- Información Personal -->
+                    <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0;">Información Personal</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Nombre</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.nombre} ${user.apellido || ''}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Email</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.email}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Teléfono</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.telefono || 'No especificado'}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Rol</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.rol}</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <p style="margin: 5px 0; font-size: 12px; color: #666;">Dirección</p>
+                            <p style="margin: 5px 0; font-weight: bold;">${user.direccion || 'No especificado'}</p>
+                        </div>
+                    </div>
+
+                    <button class="btn-login" onclick="showEditProfileModal()" style="width: 100%; padding: 12px; margin-bottom: 10px;">Editar Perfil</button>
+                    <button class="btn-login" onclick="handleLogout()" style="width: 100%; padding: 12px; background: #ef4444;">Cerrar Sesión</button>
                 </div>
             `;
             document.getElementById("profileContent").innerHTML = html;
         }
 
-        function editarPerfil() {
-            addNotification("[INFO] Función de edición próximamente", "warning");
+        function showEditProfileModal() {
+            const user = state.user;
+            
+            // Crear modal si no existe
+            let modal = document.getElementById('editProfileModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'editProfileModal';
+                modal.style.cssText = 'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;';
+                document.body.appendChild(modal);
+            }
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">✏️ Editar Perfil</h2>
+                        <button onclick="closeEditProfileModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Nombre</label>
+                            <input type="text" id="editNombre" value="${user.nombre || ''}" placeholder="Nombre" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Apellido</label>
+                            <input type="text" id="editApellido" value="${user.apellido || ''}" placeholder="Apellido" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Email</label>
+                        <input type="email" id="editEmail" value="${user.email || ''}" placeholder="Email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;" disabled>
+                        <p style="margin: 5px 0; font-size: 12px; color: #999;">El email no puede cambiar por razones de seguridad</p>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Teléfono</label>
+                        <input type="tel" id="editTelefono" value="${user.telefono || ''}" placeholder="Ej: +34 612 345 678" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Dirección</label>
+                        <input type="text" id="editDireccion" value="${user.direccion || ''}" placeholder="Calle, número, ciudad" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Contraseña (opcional)</label>
+                        <input type="password" id="editPassword" placeholder="Dejar vacío para no cambiar" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                        <p style="margin: 5px 0; font-size: 12px; color: #999;">Mínimo 6 caracteres</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button onclick="closeEditProfileModal()" class="btn-login" style="background: #999; width: 100%;">Cancelar</button>
+                        <button onclick="guardarCambiosPerfil()" class="btn-primary" style="width: 100%;">💾 Guardar Cambios</button>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function guardarCambiosPerfil() {
+            const nombre = document.getElementById("editNombre").value.trim();
+            const apellido = document.getElementById("editApellido").value.trim();
+            const telefono = document.getElementById("editTelefono").value.trim();
+            const direccion = document.getElementById("editDireccion").value.trim();
+            const password = document.getElementById("editPassword").value.trim();
+
+            if (!nombre) {
+                addNotification("[ERROR] El nombre es requerido", "error");
+                return;
+            }
+
+            // Actualizar el estado local
+            state.user.nombre = nombre;
+            state.user.apellido = apellido;
+            state.user.telefono = telefono;
+            state.user.direccion = direccion;
+
+            // Guardar en localStorage
+            localStorage.setItem('user', JSON.stringify(state.user));
+
+            // Preparar datos para enviar al servidor
+            const updateData = {
+                nombre,
+                apellido,
+                telefono,
+                direccion
+            };
+
+            // Si hay contraseña nueva, agregarla
+            if (password && password.length >= 6) {
+                updateData.password = password;
+            } else if (password && password.length < 6) {
+                addNotification("[ERROR] La contraseña debe tener al menos 6 caracteres", "error");
+                return;
+            }
+
+            // Enviar al servidor si es posible
+            fetch(`${API_URL}/api/usuario/${state.user.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.token}`
+                },
+                body: JSON.stringify(updateData)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        addNotification(`[ERROR] ${data.error}`, "error");
+                    } else {
+                        addNotification("[EXITO] Perfil actualizado correctamente", "success");
+                        closeEditProfileModal();
+                        // Recargar perfil
+                        loadPerfil();
+                    }
+                })
+                .catch(err => {
+                    // Si falla el servidor, al menos guardó en localStorage
+                    addNotification("[EXITO] Cambios guardados localmente (servidor no responde)", "success");
+                    closeEditProfileModal();
+                    loadPerfil();
+                });
         }
 
         // ========== MIS VENTAS (VENDEDOR) ==========
@@ -1996,133 +2602,263 @@
                 return;
             }
 
-            fetch(`${API_URL}/api/orden`, {
-                headers: { 'Authorization': `Bearer ${state.token}` }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const totalOrdenes = Array.isArray(data) ? data.length : 0;
-                    const totalVentas = Array.isArray(data) ? data.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
+            // Usar órdenes del estado local primero
+            let totalOrdenes = state.orders ? state.orders.length : 0;
+            let totalVentas = state.orders ? state.orders.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
+            let ventasPromedio = totalOrdenes > 0 ? totalVentas / totalOrdenes : 0;
 
-                    const html = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes</p>
-                            <h3 style="margin: 10px 0 0 0;">${totalOrdenes}</h3>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ingresos Totales</p>
-                            <h3 style="margin: 10px 0 0 0;">$${totalVentas.toFixed(2)}</h3>
-                        </div>
-                    </div>
-                    <h4>Últimas Órdenes:</h4>
-                    <div id="vendedorOrdenesList"></div>
-                `;
-                    document.getElementById("vendedorContent").innerHTML = html;
-
-                    if (Array.isArray(data) && data.length > 0) {
-                        let ordenesHtml = '';
-                        data.slice(0, 5).forEach(order => {
-                            ordenesHtml += `
-                            <div style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-                                <strong>Orden #${order.idOrden}</strong> - $${order.total.toFixed(2)} - ${order.estado}
-                            </div>
-                        `;
-                        });
-                        document.getElementById("vendedorOrdenesList").innerHTML = ordenesHtml;
+            // Contar productos únicos vendidos
+            let productosVendidos = 0;
+            if (state.orders && state.orders.length > 0) {
+                state.orders.forEach(order => {
+                    if (order.items && order.items.length > 0) {
+                        productosVendidos += order.items.length;
                     }
-                })
-                .catch(err => {
-                    document.getElementById("vendedorContent").innerHTML = `<p>[ERROR] ${err.message}</p>`;
                 });
+            }
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes Vendidas</p>
+                        <h3 style="margin: 10px 0 0 0;">${totalOrdenes}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ingresos Totales</p>
+                        <h3 style="margin: 10px 0 0 0;">$${totalVentas.toFixed(2)}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Venta Promedio</p>
+                        <h3 style="margin: 10px 0 0 0;">$${ventasPromedio.toFixed(2)}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Productos Vendidos</p>
+                        <h3 style="margin: 10px 0 0 0;">${productosVendidos}</h3>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 30px; margin-bottom: 15px;">Mis Órdenes Vendidas</h4>
+                <div id="vendedorOrdenesList"></div>
+            `;
+
+            document.getElementById("vendedorContent").innerHTML = html;
+
+            // Mostrar órdenes detalladas
+            if (state.orders && state.orders.length > 0) {
+                let ordenesHtml = '';
+                state.orders.slice().reverse().forEach((order, idx) => {
+                    const metodoPago = order.metodoPago || 'No especificado';
+                    const estado = order.estado || 'PENDIENTE';
+                    const fecha = order.timestamp ? new Date(order.timestamp).toLocaleString('es-ES') : 'Sin fecha';
+                    const ordenId = order.id ? String(order.id).substring(0, 8) : `ORD-${idx + 1}`;
+
+                    let productosHtml = '';
+                    if (order.items && order.items.length > 0) {
+                        productosHtml = order.items.map(item =>
+                            `<li style="padding: 5px 0; font-size: 12px;">${item.nombre} x${item.cantidad} - $${(item.precio * item.cantidad).toFixed(2)}</li>`
+                        ).join('');
+                    }
+
+                    ordenesHtml += `
+                        <div style="border-left: 4px solid #667eea; padding: 15px; margin-bottom: 15px; background: #f9f9f9; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <strong style="font-size: 16px; color: #333;">Orden #${ordenId}</strong>
+                                    <p style="margin: 5px 0; font-size: 12px; color: #666;">${fecha}</p>
+                                </div>
+                                <span style="background: ${estado === 'COMPLETADA' || estado === 'completado' ? '#4CAF50' : '#FF9800'}; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px; font-weight: bold;">
+                                    ${estado.toUpperCase()}
+                                </span>
+                            </div>
+                            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 3px;">
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Método de Pago:</strong> ${metodoPago}</p>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Total:</strong> <span style="color: #667eea; font-weight: bold;">$${order.total.toFixed(2)}</span></p>
+                                ${productosHtml ? `<p style="margin: 5px 0; font-size: 12px; font-weight: bold;">Productos:</p><ul style="margin: 0; padding-left: 15px; list-style: none;">${productosHtml}</ul>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById("vendedorOrdenesList").innerHTML = ordenesHtml;
+            } else {
+                document.getElementById("vendedorOrdenesList").innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Aún no tienes órdenes vendidas. Comienza a vender!</p>';
+            }
         }
 
         function loadAnalytics() {
             const analyticsContent = document.getElementById("analyticsContent");
             analyticsContent.innerHTML = '<p>[CARGANDO] Obteniendo datos...</p>';
 
-            // Consulta GraphQL para obtener métricas generales
-            const query = `
-                {
-                    metricasGenerales {
-                        totalOrdenes
-                        totalProductos
-                        totalIngresos
-                        ticketPromedio
+            // Obtener datos del estado actual y del servidor
+            let totalOrdenes = state.orders ? state.orders.length : 0;
+            let totalProductos = state.productos ? state.productos.length : 0;
+            let totalIngresos = state.orders ? state.orders.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
+            let ticketPromedio = totalOrdenes > 0 ? totalIngresos / totalOrdenes : 0;
+
+            // Calcular productos más vendidos
+            const productosVendidos = {};
+            if (state.orders && state.orders.length > 0) {
+                state.orders.forEach(order => {
+                    if (order.items && order.items.length > 0) {
+                        order.items.forEach(item => {
+                            if (!productosVendidos[item.id]) {
+                                productosVendidos[item.id] = {
+                                    nombre: item.nombre,
+                                    totalVendido: 0,
+                                    cantidadVendida: 0,
+                                    ingresosGenerados: 0
+                                };
+                            }
+                            productosVendidos[item.id].totalVendido += item.cantidad;
+                            productosVendidos[item.id].cantidadVendida += item.cantidad;
+                            productosVendidos[item.id].ingresosGenerados += (item.precio * item.cantidad);
+                        });
                     }
-                    productosMasVendidos(limite: 5) {
-                        productoId
-                        nombre
-                        totalVendido
-                        ingresosGenerados
-                    }
+                });
+            }
+
+            const topProductos = Object.values(productosVendidos)
+                .sort((a, b) => b.ingresosGenerados - a.ingresosGenerados)
+                .slice(0, 5);
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes</p>
+                        <h3 style="margin: 10px 0 0 0;">${totalOrdenes}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Productos</p>
+                        <h3 style="margin: 10px 0 0 0;">${totalProductos}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 5px;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Ingresos</p>
+                        <h3 style="margin: 10px 0 0 0;">$${totalIngresos.toFixed(2)}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 5px;">
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ticket Promedio</p>
+                        <h3 style="margin: 10px 0 0 0;">$${ticketPromedio.toFixed(2)}</h3>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 30px; margin-bottom: 15px;">Productos Más Vendidos</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    ${topProductos.length > 0
+                    ? topProductos.map((prod, idx) => `
+                            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px;">
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span style="background: #667eea; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">#${idx + 1}</span>
+                                    <strong>${prod.nombre}</strong>
+                                </div>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Cantidad vendida: ${prod.cantidadVendida}</p>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Ingresos: $${prod.ingresosGenerados.toFixed(2)}</p>
+                            </div>
+                        `).join('')
+                    : '<p style="text-align: center; color: #999;">No hay datos de productos vendidos aún</p>'
                 }
+                </div>
             `;
 
-            fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ query: query })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.errors) {
-                        analyticsContent.innerHTML = `<p>[ERROR] ${data.errors[0].message}</p>`;
-                        return;
-                    }
+            analyticsContent.innerHTML = html;
+        }
 
-                    const metrics = data.data.metricasGenerales;
-                    const productos = data.data.productosMasVendidos;
+        // ========== FUNCIONES DE FILTRADO ==========
+        function filterProducts() {
+            const filterName = document.getElementById("filterProductName").value.toLowerCase();
+            const filterSort = document.getElementById("filterProductSort").value;
+            
+            let filtered = state.products.filter(p => 
+                p.nombre.toLowerCase().includes(filterName)
+            );
 
-                    let html = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes</p>
-                            <h3 style="margin: 10px 0 0 0;">${metrics.totalOrdenes}</h3>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Productos</p>
-                            <h3 style="margin: 10px 0 0 0;">${metrics.totalProductos}</h3>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Ingresos</p>
-                            <h3 style="margin: 10px 0 0 0;">$${metrics.totalIngresos.toFixed(2)}</h3>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 5px;">
-                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ticket Promedio</p>
-                            <h3 style="margin: 10px 0 0 0;">$${metrics.ticketPromedio.toFixed(2)}</h3>
+            // Aplicar ordenamiento
+            if (filterSort === "price-asc") {
+                filtered.sort((a, b) => a.precio - b.precio);
+            } else if (filterSort === "price-desc") {
+                filtered.sort((a, b) => b.precio - a.precio);
+            } else if (filterSort === "stock") {
+                filtered.sort((a, b) => b.stock - a.stock);
+            } else {
+                filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            }
+
+            const list = document.getElementById("productsList");
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">🔍</div><p>No se encontraron productos que coincidan con los filtros</p></div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(p => `
+                <div class="product-card">
+                    <div class="product-image">
+                        ${p.emoji}
+                        ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$${p.precio.toFixed(2)}</div>
+                        <div class="product-stock">Stock: ${p.stock}</div>
+                        <div class="product-actions">
+                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                                <i class="fas fa-cart-plus"></i> Comprar
+                            </button>
+                            <button class="btn-wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
                         </div>
                     </div>
+                </div>
+            `).join("");
+        }
 
-                    <h4>Productos Más Vendidos:</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
-                            <th style="padding: 10px; text-align: left;">Producto</th>
-                            <th style="padding: 10px; text-align: center;">Vendidos</th>
-                            <th style="padding: 10px; text-align: right;">Ingresos</th>
-                        </tr>
-                `;
+        function filterOrdersByStatus(status) {
+            const historialList = document.getElementById("historialList");
+            let filtered = state.orders || [];
 
-                    productos.forEach(prod => {
-                        html += `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 10px;">${prod.nombre}</td>
-                            <td style="padding: 10px; text-align: center;">${prod.totalVendido}</td>
-                            <td style="padding: 10px; text-align: right;">$${prod.ingresosGenerados.toFixed(2)}</td>
-                        </tr>
-                    `;
-                    });
-
-                    html += '</table>';
-
-                    analyticsContent.innerHTML = html;
-                })
-                .catch(err => {
-                    analyticsContent.innerHTML = `<p>[ERROR] ${err.message}</p>`;
-                    console.error('GraphQL Error:', err);
+            if (status !== "todos") {
+                filtered = filtered.filter(o => {
+                    const orderStatus = (o.estado || "PENDIENTE").toUpperCase();
+                    return orderStatus === status.toUpperCase();
                 });
+            }
+
+            if (filtered.length === 0) {
+                historialList.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">No hay órdenes con este estado</div>`;
+                return;
+            }
+
+            historialList.innerHTML = filtered.map((order, idx) => {
+                const metodoPago = order.metodoPago || "No especificado";
+                const estado = order.estado || "PENDIENTE";
+                const fecha = order.timestamp ? new Date(order.timestamp).toLocaleString("es-ES") : new Date().toLocaleString("es-ES");
+                const ordenId = order.id ? String(order.id).substring(0, 8) : `ORD-${idx + 1}`;
+                
+                let productosHtml = "";
+                if (order.items && order.items.length > 0) {
+                    productosHtml = order.items.map(item => 
+                        `<li style="padding: 5px 0; font-size: 12px;">✓ ${item.nombre} x${item.cantidad} - $${(item.precio * item.cantidad).toFixed(2)}</li>`
+                    ).join("");
+                }
+
+                return `
+                    <div style="border-left: 4px solid #667eea; padding: 15px; margin-bottom: 15px; background: #f9f9f9; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <strong style="font-size: 16px; color: #333;">Orden #${ordenId}</strong>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">${fecha}</p>
+                            </div>
+                            <span style="background: ${estado === "COMPLETADA" || estado === "completado" ? "#4CAF50" : "#FF9800"}; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px; font-weight: bold;">
+                                ${estado.toUpperCase()}
+                            </span>
+                        </div>
+                        <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 3px;">
+                            <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Método de Pago:</strong> ${metodoPago}</p>
+                            <p style="margin: 5px 0; font-size: 12px; color: #666;"><strong>Total:</strong> <span style="color: #667eea; font-weight: bold;">$${order.total.toFixed(2)}</span></p>
+                            ${productosHtml ? `<p style="margin: 5px 0; font-size: 12px; font-weight: bold;">Productos:</p><ul style="margin: 0; padding-left: 15px; list-style: none;">${productosHtml}</ul>` : ""}
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
 
         // ========== INICIALIZACIÓN ==========

@@ -15,51 +15,63 @@ class BackgroundTasks:
         """Monitorea conexiones con heartbeat"""
         print(f"Iniciando heartbeat (interval={interval}s, timeout={timeout}s)")
         while True:
-            await asyncio.sleep(interval)
-            clients = self.connections.get_clients()
-            disconnected = []
-            
-            for ws in clients:
-                try:
-                    pong = await asyncio.wait_for(ws.ping(), timeout=timeout)
-                    await pong
-                except asyncio.TimeoutError:
-                    print(f"Heartbeat timeout para {ws.remote_address}")
-                    disconnected.append(ws)
-                except Exception as e:
-                    print(f"Heartbeat error: {e}")
-                    disconnected.append(ws)
-            
-            # Limpiar clientes desconectados
-            for ws in disconnected:
-                try:
-                    await ws.close()
-                except Exception:
-                    pass
-                self.connections.remove_client(ws)
+            try:
+                await asyncio.sleep(interval)
+                clients = self.connections.get_clients()
+                disconnected = []
+                
+                for ws in clients:
+                    try:
+                        pong = await asyncio.wait_for(ws.ping(), timeout=timeout)
+                        await pong
+                    except asyncio.TimeoutError:
+                        print(f"Heartbeat timeout para {ws.remote_address}")
+                        disconnected.append(ws)
+                    except Exception as e:
+                        print(f"Heartbeat error: {e}")
+                        disconnected.append(ws)
+                
+                # Limpiar clientes desconectados
+                for ws in disconnected:
+                    try:
+                        await ws.close()
+                    except Exception:
+                        pass
+                    self.connections.remove_client(ws)
+            except Exception as e:
+                print(f"Error en heartbeat_loop: {e}")
+                await asyncio.sleep(interval)
     
     async def stats_broadcast_loop(self, interval: int = 2) -> None:
         """Envía estadísticas periódicamente"""
         print(f"Iniciando broadcast de stats (interval={interval}s)")
         while True:
-            await asyncio.sleep(interval)
-            stats = self.connections.get_stats()
-            await self._broadcast_all(stats.to_dict())
+            try:
+                await asyncio.sleep(interval)
+                stats = self.connections.get_stats()
+                await self._broadcast_all(stats.to_dict())
+            except Exception as e:
+                print(f"Error en stats_broadcast_loop: {e}")
+                await asyncio.sleep(interval)
     
     async def product_poller_loop(self, interval: int = 5) -> None:
         """Detecta nuevos productos periódicamente"""
         print(f"Iniciando product poller (interval={interval}s)")
         while True:
-            await asyncio.sleep(interval)
-            new_products = self.db.get_new_products()
-            
-            if new_products:
-                print(f"✨ {len(new_products)} producto(s) nuevo(s) detectado(s)")
-                for product in new_products:
-                    await self._broadcast_all({
-                        'type': 'new_product',
-                        'data': [product]
-                    })
+            try:
+                await asyncio.sleep(interval)
+                new_products = self.db.get_new_products()
+                
+                if new_products:
+                    print(f"✨ {len(new_products)} producto(s) nuevo(s) detectado(s)")
+                    for product in new_products:
+                        await self._broadcast_all({
+                            'type': 'new_product',
+                            'data': [product]
+                        })
+            except Exception as e:
+                print(f"Error en product_poller_loop: {e}")
+                await asyncio.sleep(interval)
     
     async def _broadcast_all(self, message: dict) -> None:
         """Envía mensaje a todos los clientes"""

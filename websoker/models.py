@@ -92,8 +92,10 @@ class ConnectionManager:
     def get_stats(self) -> Stats:
         """Obtiene estadísticas del servidor"""
         import asyncio
+        # Asegurar que mínimo hay 1 cliente (nosotros)
+        client_count = max(1, len(self.clients))
         return Stats(
-            total_clients=len(self.clients),
+            total_clients=client_count,
             total_channels=len(self.subscriptions),
             timestamp=asyncio.get_event_loop().time()
         )
