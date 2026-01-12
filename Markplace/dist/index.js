@@ -3,7 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
+require("dotenv/config");
 const express_1 = __importDefault(require("express"));
+const path_1 = __importDefault(require("path"));
 const data_source_1 = require("./config/data-source");
 const error_middleware_1 = require("./middlewares/error.middleware");
 const Auth_routes_1 = __importDefault(require("./routes/Auth.routes"));
@@ -20,9 +23,21 @@ const DetalleOrden_routes_1 = __importDefault(require("./routes/DetalleOrden.rou
 const Pago_routes_1 = __importDefault(require("./routes/Pago.routes"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-// Ruta de prueba raíz
+// Servir archivos estáticos (marketplace.html y otros archivos)
+app.use(express_1.default.static(path_1.default.join(__dirname, "../..")));
+// CORS - Permitir solicitudes desde el frontend
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
+// Ruta de prueba raíz - Servir marketplace.html
 app.get("/", (_req, res) => {
-    res.send("✅ Servidor funcionando y conectado a la base de datos");
+    res.sendFile(path_1.default.join(__dirname, "../../marketplace.html"));
 });
 // Rutas API
 app.use("/api/auth", Auth_routes_1.default); // ← Autenticación (Login y Registro)

@@ -25,7 +25,7 @@ __decorate([
     __metadata("design:type", TarjetaVirtual_1.TarjetaVirtual)
 ], Transaccion.prototype, "tarjeta", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
 ], Transaccion.prototype, "idTarjeta", void 0);
 __decorate([
@@ -33,7 +33,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Transaccion.prototype, "monto", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 50 }),
+    (0, typeorm_1.Column)({ length: 50, default: "COMPRA", nullable: true }),
     __metadata("design:type", String)
 ], Transaccion.prototype, "tipo", void 0);
 __decorate([

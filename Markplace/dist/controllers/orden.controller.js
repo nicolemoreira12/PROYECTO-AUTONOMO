@@ -31,7 +31,11 @@ class OrdenController {
             res.status(201).json(nuevaOrden);
         }
         catch (err) {
-            res.status(400).json({ error: "Error al crear orden" });
+            console.error("Error al crear orden:", err.message || err);
+            res.status(400).json({
+                error: "Error al crear orden",
+                details: err.message || "Error desconocido"
+            });
         }
     }
     async update(req, res) {

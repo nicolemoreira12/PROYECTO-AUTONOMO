@@ -220,6 +220,227 @@
             font-weight: bold;
         }
 
+        .btn-login {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-logout {
+            padding: 8px 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .user-profile span {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-submit-auth {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-submit-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-submit-auth:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .auth-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        .auth-message.success {
+            background: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+
         .content {
             flex: 1;
             overflow-y: auto;
@@ -798,9 +1019,25 @@
                     <i class="fas fa-box"></i>
                     Productos
                 </div>
+                <div class="sidebar-item" onclick="switchTab('analytics')">
+                    <i class="fas fa-chart-bar"></i>
+                    Analytics
+                </div>
                 <div class="sidebar-item" onclick="switchTab('ordenes')">
                     <i class="fas fa-shopping-bag"></i>
                     Órdenes
+                </div>
+                <div class="sidebar-item" onclick="switchTab('historial')">
+                    <i class="fas fa-history"></i>
+                    Mis Compras
+                </div>
+                <div class="sidebar-item" onclick="switchTab('perfil')">
+                    <i class="fas fa-user"></i>
+                    Mi Perfil
+                </div>
+                <div class="sidebar-item" onclick="switchTab('vendedor')">
+                    <i class="fas fa-chart-bar"></i>
+                    Mis Ventas
                 </div>
                 <div class="sidebar-item" onclick="switchTab('notificaciones')">
                     <i class="fas fa-bell"></i>
@@ -828,6 +1065,9 @@
                     <div class="cart-icon" onclick="toggleCart()">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-badge" id="cartCount">0</span>
+                    </div>
+                    <div id="userSection">
+                        <button class="btn-login" onclick="showLoginModal()">Iniciar Sesion</button>
                     </div>
                 </div>
             </div>
@@ -898,8 +1138,19 @@
                     </div>
 
                     <div class="card">
-                        <h3>🛒 Catálogo de Productos</h3>
+                        <h3>Catálogo de Productos</h3>
                         <div id="productsList" class="products-grid"></div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS TAB -->
+                <div id="analytics" class="tab-content">
+                    <div class="card">
+                        <h3>Analytics y Reportes</h3>
+                        <button class="btn-login" onclick="loadAnalytics()" style="width: 100%; margin-bottom: 20px;">
+                            Cargar Analytics
+                        </button>
+                        <div id="analyticsContent"></div>
                     </div>
                 </div>
 
@@ -911,10 +1162,34 @@
                     </div>
                 </div>
 
+                <!-- MIS COMPRAS TAB -->
+                <div id="historial" class="tab-content">
+                    <div class="card">
+                        <h3>Mis Compras</h3>
+                        <div id="historialList" class="orders-list"></div>
+                    </div>
+                </div>
+
+                <!-- PERFIL TAB -->
+                <div id="perfil" class="tab-content">
+                    <div class="card">
+                        <h3>Mi Perfil</h3>
+                        <div id="profileContent"></div>
+                    </div>
+                </div>
+
+                <!-- MIS VENTAS TAB (VENDEDOR) -->
+                <div id="vendedor" class="tab-content">
+                    <div class="card">
+                        <h3>Mis Ventas</h3>
+                        <div id="vendedorContent"></div>
+                    </div>
+                </div>
+
                 <!-- NOTIFICACIONES TAB -->
                 <div id="notificaciones" class="tab-content">
                     <div class="card">
-                        <h3>🔔 Centro de Notificaciones</h3>
+                        <h3>Centro de Notificaciones</h3>
                         <div id="notificationsList" class="notifications-list"></div>
                     </div>
                 </div>
@@ -925,12 +1200,12 @@
     <!-- CARRITO SIDEBAR -->
     <div class="cart-sidebar" id="cartSidebar">
         <div class="cart-header">
-            <h3>🛒 Mi Carrito</h3>
+            <h3>Mi Carrito</h3>
             <span style="cursor: pointer; font-size: 24px; color: #999;" onclick="toggleCart()">×</span>
         </div>
         <div class="cart-items" id="cartItemsList">
             <div class="empty-state">
-                <div class="empty-state-icon">🛒</div>
+                <div class="empty-state-icon"></div>
                 <p>Tu carrito está vacío</p>
             </div>
         </div>
@@ -945,9 +1220,72 @@
         </div>
     </div>
 
+    <!-- MODAL DE AUTENTICACIÓN -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Autenticación</h2>
+                <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Registrarse</button>
+            </div>
+
+            <div id="loginForm" class="auth-form active">
+                <div class="auth-message" id="loginMessage"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="loginPassword" required placeholder="Tu contraseña">
+                    </div>
+                    <button type="submit" class="btn-submit-auth" id="loginBtn">Iniciar Sesión</button>
+                </form>
+            </div>
+
+            <div id="registerForm" class="auth-form">
+                <div class="auth-message" id="registerMessage"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="registerNombre" required placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido</label>
+                        <input type="text" id="registerApellido" required placeholder="Tu apellido">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="registerEmail" required placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="registerPassword" required placeholder="Tu contraseña">
+                    </div>
+                    <div class="form-group">
+                        <label>Dirección</label>
+                        <input type="text" id="registerDireccion" placeholder="Tu dirección">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="registerTelefono" placeholder="Tu teléfono">
+                    </div>
+                    <button type="submit" class="btn-submit-auth" id="registerBtn">Registrarse</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ========== CONFIGURACIÓN ==========
         const WS_URL = "ws://127.0.0.1:8000";
+        const API_URL = "http://localhost:3000";
+        const GRAPHQL_URL = "http://localhost:4000/graphql";
         let ws = null;
         let clientId = null;
         let reconnectAttempts = 0;
@@ -961,8 +1299,21 @@
             notifications: [],
             cart: [],
             currentTab: 'dashboard',
-            clientsOnline: 1  // Al menos estamos nosotros
+            clientsOnline: 1,  // Al menos estamos nosotros
+            user: null,  // Usuario autenticado
+            token: null  // JWT token
         };
+
+        // Cargar usuario desde localStorage si existe
+        function loadUser() {
+            const savedUser = localStorage.getItem('user');
+            const savedToken = localStorage.getItem('token');
+            if (savedUser && savedToken) {
+                state.user = JSON.parse(savedUser);
+                state.token = savedToken;
+                updateUserUI();
+            }
+        }
 
         // ========== WEBSOCKET ==========
         function connectWebSocket() {
@@ -1098,6 +1449,17 @@
 
             document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
             event.target.closest(".sidebar-item").classList.add("active");
+
+            // Cargar contenido dinámico según la pestaña
+            if (tabName === "historial") {
+                loadHistorialOrdenes();
+            } else if (tabName === "perfil") {
+                loadPerfil();
+            } else if (tabName === "vendedor") {
+                loadVendedorDashboard();
+            } else if (tabName === "analytics") {
+                // Se carga manualmente con el botón
+            }
         }
 
         function addProduct() {
@@ -1228,7 +1590,7 @@
             if (item) {
                 item.cantidad++;
             } else {
-                state.cart.push({ id, name, price, cantidad: 1, emoji: state.products.find(p => p.id === id)?.emoji || "🛍️" });
+                state.cart.push({ id, name, precio: price, cantidad: 1, emoji: state.products.find(p => p.id === id)?.emoji || "🛍️" });
             }
             renderCart();
             addNotification(`[AGREGADO] ${name} añadido al carrito`, "success");
@@ -1245,14 +1607,14 @@
                 return;
             }
 
-            const total = state.cart.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
+            const total = state.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
             cartList.innerHTML = state.cart.map(item => `
                 <div class="cart-item">
                     <div class="cart-item-image">${item.emoji}</div>
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">$${item.price.toFixed(2)} x${item.cantidad}</div>
+                        <div class="cart-item-price">$${item.precio.toFixed(2)} x${item.cantidad}</div>
                     </div>
                     <div class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</div>
                 </div>
@@ -1347,33 +1709,425 @@
         }
 
         function checkout() {
+            if (!state.user) {
+                addNotification("[ERROR] Debes iniciar sesión para comprar", "error");
+                showLoginModal();
+                return;
+            }
+
             if (state.cart.length === 0) {
                 addNotification("[ADVERTENCIA] Tu carrito está vacío", "warning");
                 return;
             }
 
-            const total = state.cart.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
-            const order = {
-                id: "ord_" + Date.now(),
-                items: state.cart,
+            const total = state.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+            // Crear orden para guardar en BD
+            const orderData = {
+                usuarioIdUsuario: state.user.idUsuario,
                 total: total,
-                estado: "processing",
-                timestamp: new Date().toISOString()
+                estado: "pendiente"
             };
 
-            // Registrar orden en state
-            addOrderToList(order);
+            // Enviar orden al servidor
+            fetch(`${API_URL}/api/orden`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.token}`
+                },
+                body: JSON.stringify(orderData)
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Error ${res.status}: ${res.statusText}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.idOrden) {
+                        // Guardar en state también
+                        const order = {
+                            id: data.idOrden,
+                            items: state.cart,
+                            total: total,
+                            estado: "pendiente",
+                            timestamp: new Date().toISOString(),
+                            usuario: state.user.nombre
+                        };
 
-            // Limpiar carrito
-            state.cart = [];
-            renderCart();
-            document.getElementById("cartCount").textContent = "0";
-            toggleCart();
-            addNotification("[EXITO] Orden procesada exitosamente", "success");
+                        if (!state.orders) state.orders = [];
+                        state.orders.push(order);
+
+                        addOrderToList(order);
+                        state.cart = [];
+                        renderCart();
+                        document.getElementById("cartCount").textContent = "0";
+                        toggleCart();
+                        addNotification("[EXITO] Orden creada exitosamente", "success");
+                    } else {
+                        addNotification("[ERROR] Error al crear la orden: " + JSON.stringify(data), "error");
+                    }
+                })
+                .catch(err => {
+                    console.error('Checkout error:', err);
+                    addNotification("[ERROR] Error al procesar orden: " + err.message, "error");
+                });
+        }
+
+        // ========== AUTENTICACIÓN ==========
+        function showLoginModal() {
+            document.getElementById("authModal").style.display = "block";
+        }
+
+        function closeAuthModal() {
+            document.getElementById("authModal").style.display = "none";
+            document.getElementById("loginMessage").textContent = "";
+            document.getElementById("registerMessage").textContent = "";
+            document.getElementById("loginMessage").className = "auth-message";
+            document.getElementById("registerMessage").className = "auth-message";
+        }
+
+        function switchAuthTab(tab) {
+            // Actualizar botones
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Mostrar/ocultar formularios
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const btn = document.getElementById("loginBtn");
+            const messageDiv = document.getElementById("loginMessage");
+
+            btn.disabled = true;
+            btn.textContent = "Verificando...";
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Guardar usuario y token
+                    state.user = data.usuario;
+                    state.token = data.token;
+                    localStorage.setItem('user', JSON.stringify(data.usuario));
+                    localStorage.setItem('token', data.token);
+
+                    messageDiv.className = "auth-message success";
+                    messageDiv.textContent = "[EXITO] Sesión iniciada correctamente";
+
+                    updateUserUI();
+                    closeAuthModal();
+                    addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                } else {
+                    messageDiv.className = "auth-message error";
+                    messageDiv.textContent = "[ERROR] " + (data.message || "Credenciales inválidas");
+                }
+            } catch (error) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Error de conexión: " + error.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Iniciar Sesión";
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const btn = document.getElementById("registerBtn");
+            const messageDiv = document.getElementById("registerMessage");
+
+            const userData = {
+                nombre: document.getElementById("registerNombre").value,
+                apellido: document.getElementById("registerApellido").value,
+                email: document.getElementById("registerEmail").value,
+                contrasena: document.getElementById("registerPassword").value,
+                direccion: document.getElementById("registerDireccion").value || "No especificado",
+                telefono: document.getElementById("registerTelefono").value || "No especificado",
+                rol: "usuario"
+            };
+
+            btn.disabled = true;
+            btn.textContent = "Registrando...";
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Auto login
+                    state.user = data.usuario;
+                    state.token = data.token;
+                    localStorage.setItem('user', JSON.stringify(data.usuario));
+                    localStorage.setItem('token', data.token);
+
+                    messageDiv.className = "auth-message success";
+                    messageDiv.textContent = "[EXITO] Cuenta creada correctamente";
+
+                    updateUserUI();
+                    closeAuthModal();
+                    addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                } else {
+                    messageDiv.className = "auth-message error";
+                    messageDiv.textContent = "[ERROR] " + (data.message || "Error al registrar");
+                }
+            } catch (error) {
+                messageDiv.className = "auth-message error";
+                messageDiv.textContent = "[ERROR] Error de conexión: " + error.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Registrarse";
+            }
+        }
+
+        function updateUserUI() {
+            const userSection = document.getElementById("userSection");
+
+            if (state.user) {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <span>${state.user.nombre} ${state.user.apellido}</span>
+                        <button class="btn-logout" onclick="handleLogout()">Salir</button>
+                    </div>
+                `;
+            } else {
+                userSection.innerHTML = `
+                    <button class="btn-login" onclick="showLoginModal()">Iniciar Sesión</button>
+                `;
+            }
+        }
+
+        function handleLogout() {
+            state.user = null;
+            state.token = null;
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            updateUserUI();
+            addNotification("[EXITO] Sesión cerrada", "success");
+        }
+
+        // ========== MIS COMPRAS (HISTORIAL) ==========
+        function loadHistorialOrdenes() {
+            if (!state.user) {
+                document.getElementById("historialList").innerHTML = '<p>[ERROR] Debes iniciar sesión</p>';
+                return;
+            }
+
+            fetch(`${API_URL}/api/orden`, {
+                headers: { 'Authorization': `Bearer ${state.token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(order => {
+                            html += `
+                            <div class="order-item" style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <strong>Orden #${order.idOrden}</strong>
+                                    <span style="background: #667eea; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px;">${order.estado}</span>
+                                </div>
+                                <p style="margin: 5px 0;">Total: $${order.total.toFixed(2)}</p>
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">Fecha: ${new Date(order.fechaOrden).toLocaleDateString()}</p>
+                            </div>
+                        `;
+                        });
+                    } else {
+                        html = '<p style="text-align: center; color: #999;">No tienes órdenes aún</p>';
+                    }
+                    document.getElementById("historialList").innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById("historialList").innerHTML = `<p>[ERROR] ${err.message}</p>`;
+                });
+        }
+
+        // ========== PERFIL DE USUARIO ==========
+        function loadPerfil() {
+            if (!state.user) {
+                document.getElementById("profileContent").innerHTML = '<p>[ERROR] Debes iniciar sesión</p>';
+                return;
+            }
+
+            const user = state.user;
+            const html = `
+                <div style="max-width: 500px;">
+                    <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                        <p><strong>Nombre:</strong> ${user.nombre} ${user.apellido || ''}</p>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Teléfono:</strong> ${user.telefono || 'No especificado'}</p>
+                        <p><strong>Dirección:</strong> ${user.direccion || 'No especificado'}</p>
+                        <p><strong>Rol:</strong> ${user.rol}</p>
+                    </div>
+                    <button class="btn-login" onclick="editarPerfil()" style="width: 100%; padding: 12px;">Editar Perfil</button>
+                </div>
+            `;
+            document.getElementById("profileContent").innerHTML = html;
+        }
+
+        function editarPerfil() {
+            addNotification("[INFO] Función de edición próximamente", "warning");
+        }
+
+        // ========== MIS VENTAS (VENDEDOR) ==========
+        function loadVendedorDashboard() {
+            if (!state.user) {
+                document.getElementById("vendedorContent").innerHTML = '<p>[ERROR] Debes iniciar sesión</p>';
+                return;
+            }
+
+            fetch(`${API_URL}/api/orden`, {
+                headers: { 'Authorization': `Bearer ${state.token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const totalOrdenes = Array.isArray(data) ? data.length : 0;
+                    const totalVentas = Array.isArray(data) ? data.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
+
+                    const html = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes</p>
+                            <h3 style="margin: 10px 0 0 0;">${totalOrdenes}</h3>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ingresos Totales</p>
+                            <h3 style="margin: 10px 0 0 0;">$${totalVentas.toFixed(2)}</h3>
+                        </div>
+                    </div>
+                    <h4>Últimas Órdenes:</h4>
+                    <div id="vendedorOrdenesList"></div>
+                `;
+                    document.getElementById("vendedorContent").innerHTML = html;
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        let ordenesHtml = '';
+                        data.slice(0, 5).forEach(order => {
+                            ordenesHtml += `
+                            <div style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                                <strong>Orden #${order.idOrden}</strong> - $${order.total.toFixed(2)} - ${order.estado}
+                            </div>
+                        `;
+                        });
+                        document.getElementById("vendedorOrdenesList").innerHTML = ordenesHtml;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("vendedorContent").innerHTML = `<p>[ERROR] ${err.message}</p>`;
+                });
+        }
+
+        function loadAnalytics() {
+            const analyticsContent = document.getElementById("analyticsContent");
+            analyticsContent.innerHTML = '<p>[CARGANDO] Obteniendo datos...</p>';
+
+            // Consulta GraphQL para obtener métricas generales
+            const query = `
+                {
+                    metricasGenerales {
+                        totalOrdenes
+                        totalProductos
+                        totalIngresos
+                        ticketPromedio
+                    }
+                    productosMasVendidos(limite: 5) {
+                        productoId
+                        nombre
+                        totalVendido
+                        ingresosGenerados
+                    }
+                }
+            `;
+
+            fetch(GRAPHQL_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.errors) {
+                        analyticsContent.innerHTML = `<p>[ERROR] ${data.errors[0].message}</p>`;
+                        return;
+                    }
+
+                    const metrics = data.data.metricasGenerales;
+                    const productos = data.data.productosMasVendidos;
+
+                    let html = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Órdenes</p>
+                            <h3 style="margin: 10px 0 0 0;">${metrics.totalOrdenes}</h3>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Productos</p>
+                            <h3 style="margin: 10px 0 0 0;">${metrics.totalProductos}</h3>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Total Ingresos</p>
+                            <h3 style="margin: 10px 0 0 0;">$${metrics.totalIngresos.toFixed(2)}</h3>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">Ticket Promedio</p>
+                            <h3 style="margin: 10px 0 0 0;">$${metrics.ticketPromedio.toFixed(2)}</h3>
+                        </div>
+                    </div>
+
+                    <h4>Productos Más Vendidos:</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                            <th style="padding: 10px; text-align: left;">Producto</th>
+                            <th style="padding: 10px; text-align: center;">Vendidos</th>
+                            <th style="padding: 10px; text-align: right;">Ingresos</th>
+                        </tr>
+                `;
+
+                    productos.forEach(prod => {
+                        html += `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px;">${prod.nombre}</td>
+                            <td style="padding: 10px; text-align: center;">${prod.totalVendido}</td>
+                            <td style="padding: 10px; text-align: right;">$${prod.ingresosGenerados.toFixed(2)}</td>
+                        </tr>
+                    `;
+                    });
+
+                    html += '</table>';
+
+                    analyticsContent.innerHTML = html;
+                })
+                .catch(err => {
+                    analyticsContent.innerHTML = `<p>[ERROR] ${err.message}</p>`;
+                    console.error('GraphQL Error:', err);
+                });
         }
 
         // ========== INICIALIZACIÓN ==========
         document.addEventListener("DOMContentLoaded", () => {
+            loadUser();  // Cargar usuario guardado
             connectWebSocket();
             // Actualizar stats cada 5 segundos
             setInterval(() => {
@@ -1386,6 +2140,14 @@
                 }
             }, 30000);
         });
+
+        // Cerrar modal al hacer click afuera
+        window.onclick = function (event) {
+            const modal = document.getElementById("authModal");
+            if (event.target == modal) {
+                closeAuthModal();
+            }
+        };
     </script>
 </body>
 

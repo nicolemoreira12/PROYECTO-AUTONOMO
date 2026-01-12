@@ -26,9 +26,9 @@ def get_db_connection():
             database=DB_NAME,
             sslmode="require" if DB_SSL else "prefer"
         )
-        print("✅ PostgreSQL conectado")
+        print("PostgreSQL conectado")
         return conn
     except Exception as e:
-        print(f"❌ Error conectando a PostgreSQL: {e}")
+        print(f"Error conectando a PostgreSQL: {e}")
         return None
 
