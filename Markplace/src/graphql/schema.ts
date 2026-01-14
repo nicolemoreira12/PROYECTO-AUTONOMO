@@ -1,4 +1,4 @@
-const GraphQLJSON: any = require("graphql-type-json");
+const GraphQLJSON = require('graphql-type-json');
 import { ProductoService } from "../services/Producto.service";
 import { OrdenService } from "../services/orden.service";
 import { UsuarioService } from "../services/usuario.service";
@@ -12,6 +12,7 @@ import { TarjetaVirtualService } from "../services/TarjetaVirtual.service";
 import { TransaccionService } from "../services/transaccion.service";
 import { pubsub, PRODUCT_ADDED, ORDER_CREATED } from "./pubsub";
 
+// Instantiate services
 const productoService = new ProductoService();
 const ordenService = new OrdenService();
 const usuarioService = new UsuarioService();
@@ -25,6 +26,8 @@ const tarjetaService = new TarjetaVirtualService();
 const transaccionService = new TransaccionService();
 
 export const typeDefs = `
+  scalar JSON
+
   type Producto {
     idProducto: Int
     nombreProducto: String
@@ -44,8 +47,6 @@ export const typeDefs = `
     usuario: JSON
     detalles: JSON
   }
-
-  scalar JSON
 
   type Query {
     productos: [Producto]
@@ -90,6 +91,24 @@ export const resolvers = {
     producto: async (_: any, { id }: { id: number }) => await productoService.getById(id),
     ordenes: async () => await ordenService.getAll(),
     orden: async (_: any, { id }: { id: number }) => await ordenService.getById(id),
+    usuarios: async () => await usuarioService.getAll(),
+    usuario: async (_: any, { id }: { id: number }) => await usuarioService.getById(id),
+    categorias: async () => await categoriaService.getAll(),
+    categoria: async (_: any, { id }: { id: number }) => await categoriaService.getById(id),
+    emprendedores: async () => await emprendedorService.getAll(),
+    emprendedor: async (_: any, { id }: { id: number }) => await emprendedorService.getById(id),
+    carritos: async () => await carritoService.getAll(),
+    carrito: async (_: any, { id }: { id: number }) => await carritoService.getById(id),
+    detalleCarritos: async () => await detalleCarritoService.getAll(),
+    detalleCarrito: async (_: any, { id }: { id: number }) => await detalleCarritoService.getById(id),
+    detalleOrdenes: async () => await detalleOrdenService.getAll(),
+    detalleOrden: async (_: any, { id }: { id: number }) => await detalleOrdenService.getById(id),
+    pagos: async () => await pagoService.getAll(),
+    pago: async (_: any, { id }: { id: number }) => await pagoService.getById(id),
+    tarjetas: async () => await tarjetaService.getAll(),
+    tarjeta: async (_: any, { id }: { id: number }) => await tarjetaService.getById(id),
+    transacciones: async () => await transaccionService.getAll(),
+    transaccion: async (_: any, { id }: { id: number }) => await transaccionService.getById(id),
   },
   Mutation: {
     crearProducto: async (_: any, args: any) => {
@@ -101,12 +120,10 @@ export const resolvers = {
         imagenURL: args.imagenURL,
       };
       const creado = await productoService.create(data);
-      // publicar evento
       pubsub.publish(PRODUCT_ADDED, { productAdded: creado });
       return creado;
     },
     crearOrden: async (_: any, { input }: any) => {
-      // Normalizar relaciones: usuario y productos en detalles
       try {
         if (input && input.usuario && input.usuario.idUsuario) {
           const user = await usuarioService.getById(input.usuario.idUsuario);
@@ -126,11 +143,9 @@ export const resolvers = {
           input.detalles = detalles;
         }
       } catch (e) {
-        // si alguna relación no existe, lanzar error para que el cliente lo vea
         throw e;
       }
 
-      // Construir objeto de orden con tipos correctos para TypeORM
       const ordenPayload: any = {
         fechaOrden: input && input.fechaOrden ? new Date(input.fechaOrden) : new Date(),
         estado: input && input.estado ? String(input.estado) : "PENDIENTE",
@@ -151,33 +166,5 @@ export const resolvers = {
     orderCreated: {
       subscribe: () => (pubsub as any).asyncIterator([ORDER_CREATED])
     }
-  }
-};
-
-// Extender resolvers con nuevas queries
-(module.exports = module.exports || {});
-exports.resolvers = {
-  ...module.exports.resolvers,
-  JSON: GraphQLJSON,
-  Query: {
-    ...(module.exports.resolvers && module.exports.resolvers.Query),
-    usuarios: async () => await usuarioService.getAll(),
-    usuario: async (_: any, { id }: { id: number }) => await usuarioService.getById(id),
-    categorias: async () => await categoriaService.getAll(),
-    categoria: async (_: any, { id }: { id: number }) => await categoriaService.getById(id),
-    emprendedores: async () => await emprendedorService.getAll(),
-    emprendedor: async (_: any, { id }: { id: number }) => await emprendedorService.getById(id),
-    carritos: async () => await carritoService.getAll(),
-    carrito: async (_: any, { id }: { id: number }) => await carritoService.getById(id),
-    detalleCarritos: async () => await detalleCarritoService.getAll(),
-    detalleCarrito: async (_: any, { id }: { id: number }) => await detalleCarritoService.getById(id),
-    detalleOrdenes: async () => await detalleOrdenService.getAll(),
-    detalleOrden: async (_: any, { id }: { id: number }) => await detalleOrdenService.getById(id),
-    pagos: async () => await pagoService.getAll(),
-    pago: async (_: any, { id }: { id: number }) => await pagoService.getById(id),
-    tarjetas: async () => await tarjetaService.getAll(),
-    tarjeta: async (_: any, { id }: { id: number }) => await tarjetaService.getById(id),
-    transacciones: async () => await transaccionService.getAll(),
-    transaccion: async (_: any, { id }: { id: number }) => await transaccionService.getById(id),
   }
 };

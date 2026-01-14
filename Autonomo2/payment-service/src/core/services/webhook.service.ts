@@ -47,9 +47,9 @@ export class WebhookService {
           },
           timeout: 5000, // 5 segundos de timeout
         });
-        console.log(`[WebhookService] Evento enviado exitosamente a ${partner.partnerName}.`);
+        console.log(`[WebhookService] Evento enviado exitosamente a ${partner.name}.`);
       } catch (error) {
-        console.error(`[WebhookService] Error al enviar evento a ${partner.partnerName}:`, error);
+        console.error(`[WebhookService] Error al enviar evento a ${partner.name}:`, error);
         // Aquí se podría implementar una lógica de reintentos
       }
     }

@@ -1,15 +1,15 @@
 import "dotenv/config";
 import "dotenv/config";
-import express from "express";
-import http from "http";
+import express, { Request, Response } from 'express';
+import http, { ClientRequest } from 'http';
+import { Socket } from 'net';
 import { WebSocketServer } from "ws";
 const useServer = (require("graphql-ws") as any).useServer || require("graphql-ws");
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import * as expressGraphql from "express-graphql";
-const graphqlHTTP = (expressGraphql as any).graphqlHTTP || expressGraphql;
+import { createHandler } from 'graphql-http/lib/use/express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { AppDataSource } from "./config/data-source";
 import { errorHandler } from "./middlewares/error.middleware";
-import authRoutes from "./routes/Auth.routes";
 import productoRoutes from "./routes/Producto.routes";
 import categoriaRoutes from "./routes/Categoria.routes";
 import usuarioRoutes from "./routes/Usuario.routes";
@@ -46,8 +46,28 @@ app.get("/", (_req, res) => {
   res.send("✅ Servidor funcionando y conectado a la base de datos");
 });
 
+// Proxy para el servicio de autenticación
+app.use('/api/auth', createProxyMiddleware({
+  target: 'http://localhost:4000',
+  changeOrigin: true,
+  pathRewrite: (path, req) => {
+    // Reemplaza '/api/auth' con '/auth' al principio de la ruta
+    return path.replace(/^\/api\/auth/, '/auth');
+  },
+  on: {
+    proxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
+      console.log(`[PROXY] Redirigiendo ${req.method} ${req.originalUrl} -> ${proxyReq.protocol}//${proxyReq.host}${proxyReq.path}`);
+    },
+    error: (err: Error, req: Request, res: Response | Socket) => {
+      console.error('[PROXY] Error:', err);
+      if ('status' in res) {
+        res.status(500).send('Proxy Error');
+      }
+    },
+  },
+}));
+
 // Rutas API
-app.use("/api/auth", authRoutes);  // ← Autenticación (Login y Registro)
 app.use("/api/categorias", categoriaRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/emprendedores", emprendedorRoutes);
@@ -69,13 +89,10 @@ AppDataSource.initialize()
 
     // Montar GraphQL HTTP (queries y mutations)
     const schema = makeExecutableSchema({ typeDefs, resolvers } as any);
-    app.use(
-      "/graphql",
-      graphqlHTTP({
-        schema,
-        graphiql: true,
-      })
-    );
+    app.all('/graphql', createHandler({
+      schema,
+      graphiql: process.env.NODE_ENV !== 'production',
+    } as any)); // Se castea a 'any' para evitar el error de tipado
 
     const PORT = Number(process.env.PORT) || 3000;
     app.listen(PORT, () => {

@@ -1,11 +1,6 @@
 import { AppDataSource } from "../config/data-source";
 import { Orden } from "../entities/Orden";
-<<<<<<< HEAD
 import { Usuario } from "../entities/Usuario";
-=======
-import { pubsub, ORDER_CREATED } from "../graphql/pubsub";
-import { wsClient } from "./websocket.client";
->>>>>>> dd66043914b99fe2903bdace29255bcf67548485
 
 const ordenRepo = AppDataSource.getRepository(Orden);
 const usuarioRepo = AppDataSource.getRepository(Usuario);
@@ -28,7 +23,6 @@ export class OrdenService {
     return orden;
   }
 
-<<<<<<< HEAD
   async create(data: Partial<Orden> & { usuarioIdUsuario?: number; usuarioId?: number }) {
     // Obtener el ID del usuario
     const usuarioId = data.usuarioIdUsuario || data.usuarioId;
@@ -53,15 +47,6 @@ export class OrdenService {
 
     return await ordenRepo.save(nuevaOrden);
   }
-=======
-  async create(data: Partial<Orden>) {
-    const nuevo = ordenRepo.create(data);
-    const saved = await ordenRepo.save(nuevo);
-    try { pubsub.publish(ORDER_CREATED, { orderCreated: saved }); } catch (e) { console.warn(e); }
-    try { wsClient.createOrder(saved); } catch (e) { }
-    return saved;
-  } 
->>>>>>> dd66043914b99fe2903bdace29255bcf67548485
 
   async update(id: number, data: Partial<Orden>) {
     const orden = await ordenRepo.findOneBy({ idOrden: id });
@@ -71,18 +56,9 @@ export class OrdenService {
     }
 
     ordenRepo.merge(orden, data);
-<<<<<<< HEAD
     return await ordenRepo.save(orden);
   }
 
-=======
-    const saved = await ordenRepo.save(orden);
-    try { pubsub.publish(ORDER_CREATED, { orderCreated: saved }); } catch {}
-    try { wsClient.updateOrder(String(id), saved); } catch {}
-    return saved;
-  } 
-  
->>>>>>> dd66043914b99fe2903bdace29255bcf67548485
   async delete(id: number) {
     const result = await ordenRepo.delete(id);
 
