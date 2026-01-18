@@ -17,7 +17,7 @@ export class OpenAIAdapter extends BaseLLMAdapter {
         this.validateConfig(key);
 
         this.client = new OpenAI({ apiKey: key });
-        this.model = model || process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
+        this.model = model || process.env.OPENAI_MODEL || 'gpt-5';
 
         console.log(`✅ OpenAI Adapter inicializado (modelo: ${this.model})`);
     }

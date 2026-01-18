@@ -23,7 +23,7 @@ export class GeminiAdapter extends BaseLLMAdapter {
     }
 
     /**
-     * Genera respuesta usando Google Gemini
+     * Genera respuesta usando Google Gemini con Function Calling nativo
      */
     async generateResponse(request: LLMRequest): Promise<LLMResponse> {
         try {
@@ -37,8 +37,23 @@ export class GeminiAdapter extends BaseLLMAdapter {
                 .filter(m => m.role === MessageRole.USER)
                 .pop()?.content || '';
 
+            // Si hay tools disponibles, crear modelo con function calling
+            let model = this.model;
+            if (tools && tools.length > 0) {
+                const geminiTools = this.convertToolsToGeminiFormat(tools);
+                model = this.client.getGenerativeModel({
+                    model: 'gemini-2.5-flash',
+                    tools: geminiTools,
+                    systemInstruction: `Eres un asistente útil para un marketplace. Tienes acceso a las siguientes herramientas:
+${tools.map(t => `- ${t.name}: ${t.description}`).join('\n')}
+
+Cuando el usuario pida información sobre productos, órdenes, pagos o reportes, DEBES usar las herramientas disponibles.
+Si no tienes herramientas para una tarea específica, explícale al usuario qué puedes hacer.`,
+                });
+            }
+
             // Iniciar chat
-            const chat = this.model.startChat({
+            const chat = model.startChat({
                 history,
                 generationConfig: {
                     temperature,
@@ -49,17 +64,35 @@ export class GeminiAdapter extends BaseLLMAdapter {
             // Enviar mensaje
             const result = await chat.sendMessage(lastUserMessage);
             const response = result.response;
-            const text = response.text();
 
-            // Detectar si el modelo quiere usar una herramienta
-            const toolCalls = this.detectToolCalls(text, tools);
+            // Verificar si hay function calls
+            const functionCalls = response.functionCalls();
+            
+            if (functionCalls && functionCalls.length > 0) {
+                // Gemini está solicitando usar herramientas
+                const toolCalls: ToolCall[] = functionCalls.map((fc: any) => ({
+                    toolName: fc.name,
+                    arguments: fc.args || {},
+                }));
 
+                return {
+                    content: response.text() || 'Usando herramientas...',
+                    toolCalls,
+                    finishReason: 'tool_call',
+                    usage: {
+                        inputTokens: 0,
+                        outputTokens: 0,
+                        totalTokens: 0,
+                    },
+                };
+            }
+
+            // Respuesta normal sin tool calls
             return {
-                content: text,
-                toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-                finishReason: toolCalls.length > 0 ? 'tool_call' : 'stop',
+                content: response.text(),
+                finishReason: 'stop',
                 usage: {
-                    inputTokens: 0, // Gemini no proporciona esta info fácilmente
+                    inputTokens: 0,
                     outputTokens: 0,
                     totalTokens: 0,
                 },
@@ -98,23 +131,108 @@ export class GeminiAdapter extends BaseLLMAdapter {
     }
 
     /**
+     * Convierte tools MCP al formato de Gemini Function Calling
+     */
+    private convertToolsToGeminiFormat(tools: any[]): any[] {
+        return [{
+            functionDeclarations: tools.map(tool => {
+                // Convertir array de ToolParameter a JSON Schema
+                const properties: any = {};
+                const required: string[] = [];
+
+                if (tool.parameters && Array.isArray(tool.parameters)) {
+                    tool.parameters.forEach((param: any) => {
+                        const propDef: any = {
+                            type: param.type,
+                            description: param.description,
+                        };
+
+                        // Si es array, necesitamos definir el tipo de items
+                        if (param.type === 'array') {
+                            propDef.items = {
+                                type: 'object', // Para arrays de objetos como productos
+                            };
+                        }
+
+                        if (param.enum) {
+                            propDef.enum = param.enum;
+                        }
+
+                        properties[param.name] = propDef;
+
+                        if (param.required) {
+                            required.push(param.name);
+                        }
+                    });
+                }
+
+                return {
+                    name: tool.name,
+                    description: tool.description,
+                    parameters: {
+                        type: 'object',
+                        properties,
+                        required,
+                    },
+                };
+            }),
+        }];
+    }
+
+    /**
      * Construye el historial en formato Gemini
      */
     private buildGeminiHistory(messages: Message[]): Content[] {
-        // Gemini no acepta mensajes del sistema en el historial
-        const chatMessages = messages.filter(
-            m => m.role === MessageRole.USER || m.role === MessageRole.ASSISTANT
-        );
+        const history: Content[] = [];
 
-        const history = chatMessages.map(msg => ({
-            role: msg.role === MessageRole.USER ? 'user' : 'model',
-            parts: [{ text: msg.content }],
-        }));
+        for (const msg of messages) {
+            if (msg.role === MessageRole.USER) {
+                history.push({
+                    role: 'user',
+                    parts: [{ text: msg.content }],
+                });
+            } else if (msg.role === MessageRole.ASSISTANT) {
+                history.push({
+                    role: 'model',
+                    parts: [{ text: msg.content }],
+                });
+            } else if (msg.role === MessageRole.TOOL) {
+                // Agregar el resultado de la herramienta como functionResponse
+                try {
+                    const toolResult = JSON.parse(msg.content);
+                    const toolCall = msg.metadata?.toolCall;
+
+                    if (toolCall) {
+                        // Primero agregamos el function call del modelo
+                        history.push({
+                            role: 'model',
+                            parts: [{
+                                functionCall: {
+                                    name: toolCall.toolName,
+                                    args: toolCall.arguments,
+                                },
+                            }],
+                        });
+
+                        // Luego agregamos la respuesta de la función con role 'function'
+                        history.push({
+                            role: 'function' as any,
+                            parts: [{
+                                functionResponse: {
+                                    name: toolCall.toolName,
+                                    response: toolResult,
+                                },
+                            }],
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Error procesando mensaje TOOL:', e);
+                }
+            }
+        }
 
         // Gemini requiere que el primer mensaje sea 'user'
-        // Si el historial está vacío o comienza con 'model', lo ajustamos
         if (history.length > 0 && history[0].role === 'model') {
-            // Eliminar el primer mensaje si es del modelo
             history.shift();
         }
 

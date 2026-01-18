@@ -50,17 +50,9 @@ export class BuscarProductosTool extends BaseMCPTool {
 
             const { query, limit = 10, categoria } = args;
 
-            // Construir URL de búsqueda
-            const params = new URLSearchParams();
-            params.append('q', query);
-            params.append('limit', limit.toString());
-            if (categoria) {
-                params.append('categoria', categoria);
-            }
-
-            // Llamar al servicio de marketplace
+            // Llamar al servicio de marketplace para obtener TODOS los productos
             const response = await axios.get(
-                `${this.marketplaceUrl}/api/productos/search?${params.toString()}`,
+                `${this.marketplaceUrl}/api/productos`,
                 {
                     timeout: 5000,
                     headers: {
@@ -69,12 +61,38 @@ export class BuscarProductosTool extends BaseMCPTool {
                 }
             );
 
-            const productos = response.data.productos || response.data.data || [];
+            let productos = response.data.productos || response.data.data || response.data || [];
 
-            // Formatear respuesta
-            const resultadosFormateados = productos.slice(0, limit).map((p: any) => ({
-                id: p.id,
-                nombre: p.nombre,
+            // Si es un array directo, usarlo
+            if (Array.isArray(productos) === false) {
+                productos = [];
+            }
+
+            // Filtrar por query (búsqueda en nombre y descripción)
+            if (query) {
+                const queryLower = query.toLowerCase();
+                productos = productos.filter((p: any) => {
+                    const nombre = p.nombre || p.nombreProducto || '';
+                    const descripcion = p.descripcion || '';
+                    return nombre.toLowerCase().includes(queryLower) ||
+                        descripcion.toLowerCase().includes(queryLower);
+                });
+            }
+
+            // Filtrar por categoría si se especifica
+            if (categoria) {
+                productos = productos.filter((p: any) =>
+                    p.categoria?.nombre?.toLowerCase() === categoria.toLowerCase()
+                );
+            }
+
+            // Limitar resultados
+            productos = productos.slice(0, limit);
+
+            // Formatear respuesta (mapear campos del API)
+            const resultadosFormateados = productos.map((p: any) => ({
+                id: p.id || p.idProducto,
+                nombre: p.nombre || p.nombreProducto,
                 descripcion: p.descripcion,
                 precio: p.precio,
                 stock: p.stock,
@@ -85,7 +103,7 @@ export class BuscarProductosTool extends BaseMCPTool {
             return this.success({
                 total: resultadosFormateados.length,
                 productos: resultadosFormateados,
-                mensaje: `Se encontraron ${resultadosFormateados.length} productos para "${query}"`,
+                mensaje: `Se encontraron ${resultadosFormateados.length} productos${query ? ` para "${query}"` : ''}`,
             });
         } catch (error: any) {
             console.error('Error buscando productos:', error);
