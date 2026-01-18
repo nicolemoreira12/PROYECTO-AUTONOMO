@@ -67,7 +67,7 @@ Si no tienes herramientas para una tarea específica, explícale al usuario qué
 
             // Verificar si hay function calls
             const functionCalls = response.functionCalls();
-            
+
             if (functionCalls && functionCalls.length > 0) {
                 // Gemini está solicitando usar herramientas
                 const toolCalls: ToolCall[] = functionCalls.map((fc: any) => ({
