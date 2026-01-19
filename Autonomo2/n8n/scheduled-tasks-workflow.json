@@ -5,19 +5,24 @@
       "parameters": {
         "triggerTimes": [
           {
-            "mode": "everyHour"
+            "mode": "everyDay",
+            "hour": 9,
+            "minute": 0
           }
         ]
       },
       "name": "Cron",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
-        "requestMethod": "POST",
-        "url": "http://tu_microservicio/ejecutar_tarea",
+        "requestMethod": "GET",
+        "url": "http://localhost:3000/api/reportes/diario",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "{}"
@@ -25,19 +30,25 @@
       "name": "Ejecutar Tarea",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
         "fromEmail": "noreply@tuapp.com",
         "toEmail": "admin@tuapp.com",
-        "subject": "Reporte programado",
-        "text": "Tarea programada ejecutada correctamente."
+        "subject": "Reporte Diario - {{$now.format('DD/MM/YYYY')}}",
+        "text": "Reporte diario generado exitosamente.\n\nDatos del reporte:\n{{JSON.stringify($json, null, 2)}}"
       },
       "name": "Enviar Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 1,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     }
   ],
   "connections": {
