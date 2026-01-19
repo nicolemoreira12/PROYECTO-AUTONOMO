@@ -1078,7 +1078,8 @@
                         <span id="connectionText">Conectando...</span>
                     </div>
                     <!-- Bot\u00f3n de Asistente IA -->
-                    <button class="btn-ai-assistant" onclick="openAIAssistant()" id="aiAssistantBtn" style="padding: 8px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.3s; box-shadow: 0 2px 5px rgba(102,126,234,0.3);">
+                    <button class="btn-ai-assistant" onclick="openAIAssistant()" id="aiAssistantBtn"
+                        style="padding: 8px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.3s; box-shadow: 0 2px 5px rgba(102,126,234,0.3);">
                         <i class="fas fa-robot"></i> Asistente IA
                     </button>
                     <div class="cart-icon cliente-only" onclick="toggleCart()" style="display: none;">
@@ -1096,31 +1097,40 @@
                 <!-- DASHBOARD TAB -->
                 <div id="dashboard" class="tab-content active">
                     <!-- Estado de Microservicios -->
-                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                    <div class="card"
+                        style="margin-bottom: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                             <h3 style="margin: 0; border: none; padding: 0;">🔌 Estado de Microservicios</h3>
-                            <button onclick="checkServicesHealth()" style="background: white; color: #667eea; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                            <button onclick="checkServicesHealth()"
+                                style="background: white; color: #667eea; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px;">
                                 <i class="fas fa-sync-alt"></i> Actualizar
                             </button>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;">
-                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;">
+                            <div
+                                style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 24px; margin-bottom: 5px;" id="wsStatus">⚪</div>
                                 <div style="font-size: 11px; font-weight: 600;">WebSocket</div>
                             </div>
-                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 24px; margin-bottom: 5px;" id="authStatus">⚪</div>
                                 <div style="font-size: 11px; font-weight: 600;">Auth Service</div>
                             </div>
-                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 24px; margin-bottom: 5px;" id="paymentStatus">⚪</div>
                                 <div style="font-size: 11px; font-weight: 600;">Payment</div>
                             </div>
-                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 24px; margin-bottom: 5px;" id="aiStatus">⚪</div>
                                 <div style="font-size: 11px; font-weight: 600;">AI Orchestrator</div>
                             </div>
-                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 24px; margin-bottom: 5px;" id="marketplaceStatus">⚪</div>
                                 <div style="font-size: 11px; font-weight: 600;">Marketplace</div>
                             </div>
@@ -1570,7 +1580,7 @@
         const PAYMENT_URL = MICROSERVICES.PAYMENT;
         const AI_URL = MICROSERVICES.AI_ORCHESTRATOR;
         const GRAPHQL_URL = MICROSERVICES.GRAPHQL;
-        
+
         let ws = null;
         let clientId = null;
         let reconnectAttempts = 0;
@@ -1623,7 +1633,7 @@
 
             for (const service of services) {
                 try {
-                    const response = await fetch(service.url, { 
+                    const response = await fetch(service.url, {
                         method: 'GET',
                         signal: AbortSignal.timeout(3000) // 3 segundos timeout
                     });
@@ -1665,7 +1675,7 @@
 
             const activeServices = Object.values(state.servicesHealth).filter(s => s).length;
             const totalServices = Object.keys(state.servicesHealth).length;
-            
+
             console.log(`\ud83d\udd0c Microservicios: ${activeServices}/${totalServices} activos`, state.servicesHealth);
 
             // Mostrar botón de IA si el servicio está activo y hay usuario logueado
@@ -2650,7 +2660,7 @@
                 userSection.innerHTML = `
                     <button class="btn-login" onclick="showLoginModal()">Iniciar Sesi\u00f3n</button>
                 `;
-                
+
                 // Ocultar bot\u00f3n de IA
                 if (aiBtn) {
                     aiBtn.style.display = 'none';
@@ -3438,8 +3448,8 @@
         // ========== AI ORCHESTRATOR INTEGRATION ==========
         async function initAIOrchestrator() {
             try {
-                const healthCheck = await fetch(`${AI_URL}/health`, { 
-                    signal: AbortSignal.timeout(3000) 
+                const healthCheck = await fetch(`${AI_URL}/health`, {
+                    signal: AbortSignal.timeout(3000)
                 });
                 if (!healthCheck.ok) {
                     console.warn('⚠️ AI Orchestrator no disponible');
@@ -3449,7 +3459,7 @@
                 state.aiConnected = true;
                 state.servicesHealth.aiOrchestrator = true;
                 console.log('✅ AI Orchestrator conectado');
-                
+
                 if (state.user && state.token) {
                     await startAIConversation();
                 }
@@ -3510,12 +3520,12 @@
                 if (response.ok) {
                     const data = await response.json();
                     console.log('✅ Respuesta AI:', data);
-                    
+
                     // Guardar conversationId para próximas preguntas
                     if (data.conversationId && !state.aiConversationId) {
                         state.aiConversationId = data.conversationId;
                     }
-                    
+
                     return data.response || data.assistantResponse || 'Respuesta recibida';
                 } else {
                     const errorData = await response.json();
@@ -3537,7 +3547,7 @@
             addNotification('🤖 Consultando al asistente IA...', 'info');
             const message = `Basándote en mi historial de compras y productos disponibles, ¿qué productos me recomiendas?`;
             const response = await askAI(message);
-            
+
             if (response) {
                 addNotification(`🤖 Recomendación: ${response}`, 'success');
             }
@@ -3594,17 +3604,17 @@
         async function sendAIMessage() {
             const input = document.getElementById('aiMessageInput');
             const message = input.value.trim();
-            
+
             if (!message) return;
 
             const chatDiv = document.getElementById('aiChatMessages');
-            
+
             // Agregar mensaje del usuario
             const userMsg = document.createElement('div');
             userMsg.style.cssText = 'margin: 10px 0; padding: 12px; background: #667eea; color: white; border-radius: 10px 10px 0 10px; margin-left: 20%; text-align: right;';
             userMsg.textContent = message;
             chatDiv.appendChild(userMsg);
-            
+
             input.value = '';
             chatDiv.scrollTop = chatDiv.scrollHeight;
 
@@ -3618,7 +3628,7 @@
 
             // Enviar mensaje al AI
             const response = await askAI(message);
-            
+
             // Remover indicador de escritura
             chatDiv.removeChild(typingDiv);
 
@@ -3633,36 +3643,36 @@
         // ========== INICIALIZACIÓN ==========
         document.addEventListener("DOMContentLoaded", async () => {
             console.log('🚀 Inicializando Marketplace con arquitectura de microservicios...');
-            
+
             loadUser();  // Cargar usuario guardado
-            
+
             // Verificar salud de todos los microservicios
             await checkServicesHealth();
-            
+
             // Conectar servicios principales
             connectWebSocket();
             await loadProducts();
-            
+
             // Inicializar AI Orchestrator si está disponible
             if (state.user && state.token) {
                 await initAIOrchestrator();
             }
-            
+
             // Verificar servicios cada 30 segundos
             setInterval(checkServicesHealth, 30000);
-            
+
             // Actualizar stats cada 5 segundos
             setInterval(() => {
                 updateStats({ total_clients: state.clientsOnline });
             }, 5000);
-            
+
             // Enviar ping cada 30 segundos para mantener viva la conexión
             setInterval(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ action: "ping" }));
                 }
             }, 30000);
-            
+
             console.log('✅ Marketplace inicializado');
             console.log('📊 Servicios disponibles:', state.servicesHealth);
         });

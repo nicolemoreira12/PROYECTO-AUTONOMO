@@ -33,7 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
     res.header('Access-Control-Max-Age', '86400');
-    
+
     // Responder inmediatamente a OPTIONS
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);

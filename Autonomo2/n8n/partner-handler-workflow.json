@@ -11,7 +11,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -20,7 +23,10 @@
       "name": "Verificar HMAC",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -37,12 +43,15 @@
       "name": "Switch",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http://tu_microservicio/eventoA",
+        "url": "http://localhost:5678/webhook/partner/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"
@@ -50,12 +59,15 @@
       "name": "HTTP EventoA",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [960, 200]
+      "position": [
+        960,
+        200
+      ]
     },
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http://tu_microservicio/eventoB",
+        "url": "http: //localhost:5678/webhook/partner/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"
@@ -63,7 +75,10 @@
       "name": "HTTP EventoB",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [960, 400]
+      "position": [
+        960,
+        400
+      ]
     },
     {
       "parameters": {
@@ -73,7 +88,10 @@
       "name": "Responder ACK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1200, 300]
+      "position": [
+        1200,
+        300
+      ]
     }
   ],
   "connections": {

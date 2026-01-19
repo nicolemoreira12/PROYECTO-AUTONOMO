@@ -11,7 +11,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -20,12 +23,15 @@
       "name": "Validar Pago",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http://tu_microservicio/activar_reserva",
+        "url": "http://localhost:5678/webhook/payment/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"
@@ -33,12 +39,15 @@
       "name": "Activar Reserva",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http://tu_backend/notificar_websocket",
+        "url": "http://localhost:5678/webhook/payment/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"
@@ -46,7 +55,10 @@
       "name": "Notificar WebSocket",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [960, 200]
+      "position": [
+        960,
+        200
+      ]
     },
     {
       "parameters": {
@@ -58,12 +70,15 @@
       "name": "Enviar Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 1,
-      "position": [960, 400]
+      "position": [
+        960,
+        400
+      ]
     },
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http://webhook_partner/recibir_evento",
+        "url": "http://localhost:5678/webhook/payment/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"
@@ -71,7 +86,10 @@
       "name": "Webhook Partner",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [1200, 300]
+      "position": [
+        1200,
+        300
+      ]
     }
   ],
   "connections": {
