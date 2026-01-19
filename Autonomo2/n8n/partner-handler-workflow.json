@@ -67,7 +67,7 @@
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "http: //localhost:5678/webhook/partner/webhook",
+        "url": "http://localhost:5678/webhook/partner/webhook",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{$json}}"

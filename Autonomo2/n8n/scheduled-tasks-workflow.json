@@ -1,0 +1,388 @@
+{
+  "name": "Scheduled Tasks",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 9,
+            "minute": 0
+          }
+        ]
+      },
+      "name": "Reporte Diario 9AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 2,
+            "minute": 0
+          }
+        ]
+      },
+      "name": "Limpieza 2AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 10,
+            "minute": 0
+          }
+        ]
+      },
+      "name": "Recordatorios 10AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyHour"
+          }
+        ]
+      },
+      "name": "Health Check Horario",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generar reporte de ventas simulado\nconst fecha = new Date().toISOString().split('T')[0];\nreturn [{\n  json: {\n    fecha: fecha,\n    ventas_totales: 15420,\n    ordenes_completadas: 47,\n    ordenes_pendientes: 8,\n    ingresos: '$15,420.00',\n    clientes_nuevos: 12,\n    productos_mas_vendidos: ['Producto A', 'Producto B', 'Producto C']\n  }\n}];"
+      },
+      "name": "Generar Reporte Ventas",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Simular limpieza de datos\nreturn [{\n  json: {\n    sesiones_eliminadas: 234,\n    logs_eliminados: 1500,\n    espacio_liberado: '45MB',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Limpiar Datos",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Simular pagos pendientes\nreturn [{\n  json: {\n    pagos: [\n      {email: 'user1@example.com', orderId: 'ORD001', amount: 150},\n      {email: 'user2@example.com', orderId: 'ORD002', amount: 200},\n      {email: 'user3@example.com', orderId: 'ORD003', amount: 75}\n    ]\n  }\n}];"
+      },
+      "name": "Obtener Pagos Pendientes",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "http://localhost:5000/health",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Check Payment Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        480,
+        750
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "http://localhost:4000/health",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Check Auth Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        480,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "http://localhost:6000/health",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Check AI Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        480,
+        950
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@tuapp.com",
+        "toEmail": "admin@tuapp.com",
+        "subject": "Reporte Diario de Ventas - {{$now.format('DD/MM/YYYY')}}",
+        "text": "Reporte diario generado exitosamente.\n\nDatos:\n{{JSON.stringify($json, null, 2)}}"
+      },
+      "name": "Enviar Reporte Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Enviar recordatorio por cada pago pendiente\nconst pendientes = $json.pagos || [];\nreturn pendientes.map(pago => ({\n  json: {\n    email: pago.email,\n    orderId: pago.orderId,\n    amount: pago.amount\n  }\n}));"
+      },
+      "name": "Procesar Pendientes",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        720,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@tuapp.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "Recordatorio de Pago Pendiente",
+        "text": "Hola,\n\nTienes un pago pendiente por ${{$json.amount}}.\nOrden: {{$json.orderId}}\n\nPor favor completa tu pago pronto."
+      },
+      "name": "Enviar Recordatorio",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        960,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Consolidar resultados de health checks\nconst results = {\n  payment: items[0]?.json || {status: 'error'},\n  auth: items[1]?.json || {status: 'error'},\n  ai: items[2]?.json || {status: 'error'},\n  timestamp: new Date().toISOString()\n};\n\nconst allHealthy = Object.values(results).every(r => r.status === 'ok' || r.status === 'healthy');\n\nreturn [{\n  json: {\n    ...results,\n    allHealthy,\n    message: allHealthy ? 'Todos los servicios están operativos' : 'Algunos servicios tienen problemas'\n  }\n}];"
+      },
+      "name": "Consolidar Health Status",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        720,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.allHealthy}}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "name": "Hay Problemas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        960,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@tuapp.com",
+        "toEmail": "admin@tuapp.com",
+        "subject": "⚠️ ALERTA: Problemas en Servicios",
+        "text": "Se detectaron problemas en los siguientes servicios:\n\n{{JSON.stringify($json, null, 2)}}\n\nPor favor revisar inmediatamente."
+      },
+      "name": "Enviar Alerta",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        850
+      ]
+    }
+  ],
+  "connections": {
+    "Reporte Diario 9AM": {
+      "main": [
+        [
+          {
+            "node": "Generar Reporte Ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpieza 2AM": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recordatorios 10AM": {
+      "main": [
+        [
+          {
+            "node": "Obtener Pagos Pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Check Horario": {
+      "main": [
+        [
+          {
+            "node": "Check Payment Service",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Auth Service",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check AI Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar Reporte Ventas": {
+      "main": [
+        [
+          {
+            "node": "Enviar Reporte Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Pagos Pendientes": {
+      "main": [
+        [
+          {
+            "node": "Procesar Pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Pendientes": {
+      "main": [
+        [
+          {
+            "node": "Enviar Recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Payment Service": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Health Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Auth Service": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Health Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check AI Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Health Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar Health Status": {
+      "main": [
+        [
+          {
+            "node": "Hay Problemas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hay Problemas?": {
+      "main": [
+        [
+          {
+            "node": "Enviar Alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
