@@ -1,0 +1,141 @@
+{
+  "name": "Partner Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "partner/webhook"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nconst secret = 'TU_CLAVE_SECRETA';\nconst payload = JSON.stringify(items[0].json);\nconst signature = $json[\"signature\"];\nconst expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex');\nif (signature === expectedSignature) {\n  return items;\n} else {\n  throw new Error('Firma HMAC inválida');\n}"
+      },
+      "name": "Verificar HMAC",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplit": "eventType",
+        "rules": [
+          {
+            "value": "eventoA"
+          },
+          {
+            "value": "eventoB"
+          }
+        ]
+      },
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://tu_microservicio/eventoA",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{$json}}"
+      },
+      "name": "HTTP EventoA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://tu_microservicio/eventoB",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{$json}}"
+      },
+      "name": "HTTP EventoB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"status\":\"ok\"}",
+        "responseCode": 200
+      },
+      "name": "Responder ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verificar HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar HMAC": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP EventoA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP EventoB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP EventoA": {
+      "main": [
+        [
+          {
+            "node": "Responder ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP EventoB": {
+      "main": [
+        [
+          {
+            "node": "Responder ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
