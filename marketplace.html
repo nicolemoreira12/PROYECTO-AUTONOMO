@@ -1805,7 +1805,7 @@
                     </div>
                 </div>
             `).join("");
-            
+
             // Actualizar visibilidad de botones según el rol
             updateRoleBasedUI();
         }
@@ -1849,7 +1849,7 @@
                     </div>
                 </div>
             `).join("");
-            
+
             // Actualizar visibilidad de botones según el rol
             updateRoleBasedUI();
         }
@@ -3052,7 +3052,7 @@
                     </div>
                 </div>
             `).join("");
-            
+
             // Actualizar visibilidad de botones según el rol
             updateRoleBasedUI();
         }
@@ -3178,7 +3178,7 @@
                 const response = await fetch(`${API_URL}/api/producto`, {
                     headers: state.token ? { 'Authorization': `Bearer ${state.token}` } : {}
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     if (Array.isArray(data)) {
