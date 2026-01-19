@@ -1010,7 +1010,8 @@
                 <i class="fas fa-store"></i>
                 Marketplace
             </div>
-            <div class="sidebar-menu">
+            <div class="sidebar-menu" id="sidebarMenu">
+                <!-- Opciones Comunes -->
                 <div class="sidebar-item active" onclick="switchTab('dashboard')">
                     <i class="fas fa-chart-line"></i>
                     Dashboard
@@ -1019,30 +1020,40 @@
                     <i class="fas fa-box"></i>
                     Productos
                 </div>
-                <div class="sidebar-item" onclick="switchTab('analytics')">
-                    <i class="fas fa-chart-bar"></i>
-                    Analytics
-                </div>
-                <div class="sidebar-item" onclick="switchTab('ordenes')">
-                    <i class="fas fa-shopping-bag"></i>
-                    Órdenes
-                </div>
-                <div class="sidebar-item" onclick="switchTab('historial')">
-                    <i class="fas fa-history"></i>
-                    Mis Compras
-                </div>
                 <div class="sidebar-item" onclick="switchTab('perfil')">
                     <i class="fas fa-user"></i>
                     Mi Perfil
                 </div>
-                <div class="sidebar-item" onclick="switchTab('vendedor')">
-                    <i class="fas fa-chart-bar"></i>
-                    Mis Ventas
+
+                <!-- Solo para CLIENTES -->
+                <div class="sidebar-item cliente-only" onclick="switchTab('historial')" style="display: none;">
+                    <i class="fas fa-history"></i>
+                    Mis Compras
                 </div>
-                <div class="sidebar-item" onclick="switchTab('tarjeta')">
+                <div class="sidebar-item cliente-only" onclick="switchTab('tarjeta')" style="display: none;">
                     <i class="fas fa-credit-card"></i>
                     Tarjeta Virtual
                 </div>
+
+                <!-- Solo para VENDEDORES -->
+                <div class="sidebar-item vendedor-only" onclick="switchTab('agregarProducto')" style="display: none;">
+                    <i class="fas fa-plus-circle"></i>
+                    Agregar Producto
+                </div>
+                <div class="sidebar-item vendedor-only" onclick="switchTab('misVentas')" style="display: none;">
+                    <i class="fas fa-dollar-sign"></i>
+                    Mis Ventas
+                </div>
+                <div class="sidebar-item vendedor-only" onclick="switchTab('estadisticas')" style="display: none;">
+                    <i class="fas fa-chart-bar"></i>
+                    Estadísticas
+                </div>
+                <div class="sidebar-item vendedor-only" onclick="switchTab('ordenes')" style="display: none;">
+                    <i class="fas fa-shopping-bag"></i>
+                    Órdenes
+                </div>
+
+                <!-- Notificaciones -->
                 <div class="sidebar-item" onclick="switchTab('notificaciones')">
                     <i class="fas fa-bell"></i>
                     Notificaciones
@@ -1066,7 +1077,7 @@
                         <div class="status-dot" id="statusDot"></div>
                         <span id="connectionText">Conectando...</span>
                     </div>
-                    <div class="cart-icon" onclick="toggleCart()">
+                    <div class="cart-icon cliente-only" onclick="toggleCart()" style="display: none;">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-badge" id="cartCount">0</span>
                     </div>
@@ -1323,6 +1334,91 @@
                         <div id="notificationsList" class="notifications-list"></div>
                     </div>
                 </div>
+
+                <!-- AGREGAR PRODUCTO TAB (Solo Vendedores) -->
+                <div id="agregarProducto" class="tab-content">
+                    <div class="card">
+                        <h3>➕ Agregar Nuevo Producto</h3>
+                        <div class="auth-message" id="productMessage"></div>
+                        <form onsubmit="handleAddProduct(event)" style="max-width: 600px;">
+                            <div class="form-group">
+                                <label>Nombre del Producto</label>
+                                <input type="text" id="prodNombre" required placeholder="Ej: Laptop HP">
+                            </div>
+                            <div class="form-group">
+                                <label>Descripción</label>
+                                <textarea id="prodDescripcion" rows="3"
+                                    placeholder="Descripción detallada del producto"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Precio (USD)</label>
+                                <input type="number" id="prodPrecio" required step="0.01" min="0" placeholder="99.99">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock Disponible</label>
+                                <input type="number" id="prodStock" required min="0" placeholder="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Categoría</label>
+                                <select id="prodCategoria"
+                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="1">Electrónica</option>
+                                    <option value="2">Hogar</option>
+                                    <option value="3">Libros</option>
+                                    <option value="4">Ropa</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-submit-auth" id="btnAddProduct">Agregar Producto</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MIS VENTAS TAB (Solo Vendedores) -->
+                <div id="misVentas" class="tab-content">
+                    <div class="card">
+                        <h3>💰 Mis Ventas</h3>
+                        <div class="stats-container" style="margin-bottom: 20px;">
+                            <div class="stat-card">
+                                <div class="stat-label">Ventas Totales</div>
+                                <div class="stat-value" id="totalVentasVendedor">$0.00</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Órdenes</div>
+                                <div class="stat-value" id="cantidadOrdenesVendedor">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Promedio por Orden</div>
+                                <div class="stat-value" id="promedioOrdenVendedor">$0.00</div>
+                            </div>
+                        </div>
+                        <div id="ventasListVendedor"></div>
+                    </div>
+                </div>
+
+                <!-- ESTADÍSTICAS TAB (Solo Vendedores) -->
+                <div id="estadisticas" class="tab-content">
+                    <div class="card">
+                        <h3>📊 Estadísticas del Mes</h3>
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <div class="stat-label">Ingresos del Mes</div>
+                                <div class="stat-value" id="ingresosMes">$0.00</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Productos Vendidos</div>
+                                <div class="stat-value" id="productosVendidosMes">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Crecimiento</div>
+                                <div class="stat-value" id="crecimientoMes" style="font-size: 20px;">+0%</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <h4>📈 Ventas por Categoría</h4>
+                            <div id="ventasPorCategoria" style="margin-top: 15px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1405,6 +1501,14 @@
                         <label>Teléfono</label>
                         <input type="tel" id="registerTelefono" placeholder="Tu teléfono">
                     </div>
+                    <div class="form-group">
+                        <label>Tipo de Usuario</label>
+                        <select id="registerRol"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                            <option value="user">Cliente</option>
+                            <option value="emprendedor">Vendedor/Emprendedor</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn-submit-auth" id="registerBtn">Registrarse</button>
                 </form>
             </div>
@@ -1415,6 +1519,8 @@
         // ========== CONFIGURACIÓN ==========
         const WS_URL = "ws://127.0.0.1:8000";
         const API_URL = "http://localhost:3000";
+        const AUTH_URL = "http://localhost:4000";
+        const PAYMENT_URL = "http://localhost:5000";
         const GRAPHQL_URL = "http://localhost:4000/graphql";
         let ws = null;
         let clientId = null;
@@ -1673,7 +1779,7 @@
         function renderProducts() {
             const list = document.getElementById("productsList");
 
-            if (state.products.length === 0) {
+            if (!state.products || state.products.length === 0) {
                 list.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">📦</div><p>No hay productos aún</p></div>';
                 return;
             }
@@ -1681,7 +1787,7 @@
             list.innerHTML = state.products.map(p => `
                 <div class="product-card">
                     <div class="product-image">
-                        ${p.emoji}
+                        ${p.emoji || '🛍️'}
                         ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
                     </div>
                     <div class="product-info">
@@ -1689,7 +1795,7 @@
                         <div class="product-price">$${p.precio.toFixed(2)}</div>
                         <div class="product-stock">Stock: ${p.stock}</div>
                         <div class="product-actions">
-                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                            <button class="btn-buy btn-add-cart" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
                                 <i class="fas fa-cart-plus"></i> Comprar
                             </button>
                             <button class="btn-wishlist">
@@ -1699,6 +1805,9 @@
                     </div>
                 </div>
             `).join("");
+            
+            // Actualizar visibilidad de botones según el rol
+            updateRoleBasedUI();
         }
 
         function buscar() {
@@ -1722,7 +1831,7 @@
             list.innerHTML = filtered.map(p => `
                 <div class="product-card">
                     <div class="product-image">
-                        ${p.emoji}
+                        ${p.emoji || '🛍️'}
                         ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
                     </div>
                     <div class="product-info">
@@ -1730,7 +1839,7 @@
                         <div class="product-price">$${p.precio.toFixed(2)}</div>
                         <div class="product-stock">Stock: ${p.stock}</div>
                         <div class="product-actions">
-                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                            <button class="btn-buy btn-add-cart" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
                                 <i class="fas fa-cart-plus"></i> Comprar
                             </button>
                             <button class="btn-wishlist">
@@ -1740,6 +1849,9 @@
                     </div>
                 </div>
             `).join("");
+            
+            // Actualizar visibilidad de botones según el rol
+            updateRoleBasedUI();
         }
 
         // Buscar en tiempo real mientras escribes
@@ -1757,11 +1869,21 @@
         });
 
         function addToCart(id, name, price) {
+            // Validar que el usuario no sea vendedor
+            if (state.user) {
+                const rol = state.user.role || state.user.rol || '';
+                if (rol === 'emprendedor' || rol === 'vendedor') {
+                    addNotification("[ERROR] Los vendedores no pueden comprar productos", "error");
+                    return;
+                }
+            }
+
             const item = state.cart.find(i => i.id === id);
             if (item) {
                 item.cantidad++;
             } else {
-                state.cart.push({ id, name, precio: price, cantidad: 1, emoji: state.products.find(p => p.id === id)?.emoji || "🛍️" });
+                const productEmoji = state.products.find(p => p.id === id)?.emoji || "🛍️";
+                state.cart.push({ id, name, precio: price, cantidad: 1, emoji: productEmoji });
             }
             renderCart();
             addNotification(`[AGREGADO] ${name} añadido al carrito`, "success");
@@ -2080,15 +2202,18 @@
             messageDiv.textContent = 'Procesando pago...';
             messageDiv.style.color = '#f59e0b';
 
-            const orderData = {
-                usuarioIdUsuario: state.user.idUsuario,
-                total: total,
-                estado: "completado",
-                metodoPago: method
-            };
-
             try {
-                const response = await fetch(`${API_URL}/api/orden`, {
+                const userId = state.user.id || state.user.idUsuario;
+
+                // Primero crear la orden en el Marketplace
+                const orderData = {
+                    usuarioIdUsuario: userId,
+                    total: total,
+                    estado: "pendiente",
+                    metodoPago: method
+                };
+
+                const orderResponse = await fetch(`${API_URL}/api/orden`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2097,17 +2222,46 @@
                     body: JSON.stringify(orderData)
                 });
 
-                const data = await response.json();
+                const orderResult = await orderResponse.json();
 
-                if (response.ok && data.idOrden) {
+                if (!orderResponse.ok || !orderResult.idOrden) {
+                    messageDiv.textContent = '[ERROR] No se pudo crear la orden';
+                    messageDiv.style.color = '#ef4444';
+                    return;
+                }
+
+                // Ahora procesar el pago con el orderId
+                const paymentData = {
+                    amount: total,
+                    currency: 'USD',
+                    orderId: orderResult.idOrden,
+                    provider: 'mock', // Proveedor mock para desarrollo
+                    customerEmail: state.user.email,
+                    description: `Orden #${orderResult.idOrden} - Marketplace`
+                };
+
+                const paymentResponse = await fetch(`${PAYMENT_URL}/api/payments/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                const paymentResult = await paymentResponse.json();
+
+                if (paymentResponse.ok && paymentResult.success) {
+                    // Actualizar estado de la orden a completado
+                    const userName = state.user.firstName || state.user.nombre || state.user.name || 'Usuario';
                     const order = {
-                        id: data.idOrden,
+                        id: orderResult.idOrden,
                         items: state.cart.slice(),
                         total: total,
                         estado: "completado",
                         metodoPago: method,
                         timestamp: new Date().toISOString(),
-                        usuario: state.user.nombre
+                        usuario: userName
                     };
 
                     if (!state.orders) state.orders = [];
@@ -2132,7 +2286,7 @@
                         addNotification("[EXITO] Orden completada exitosamente", "success");
                     }, 1000);
                 } else {
-                    messageDiv.textContent = '[ERROR] ' + (data.message || 'Error al procesar orden');
+                    messageDiv.textContent = '[ERROR] Pago rechazado: ' + (paymentResult.message || 'Error en el procesamiento');
                     messageDiv.style.color = '#ef4444';
                 }
             } catch (error) {
@@ -2194,7 +2348,7 @@
             messageDiv.textContent = "";
 
             try {
-                const response = await fetch(`${API_URL}/api/auth/login`, {
+                const response = await fetch(`${AUTH_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -2202,12 +2356,15 @@
 
                 const data = await response.json();
 
-                if (response.ok && data.usuario && data.token) {
-                    // Guardar usuario y token
-                    state.user = data.usuario;
-                    state.token = data.token;
-                    localStorage.setItem('user', JSON.stringify(data.usuario));
-                    localStorage.setItem('token', data.token);
+                if (response.ok && data.success && data.data) {
+                    // El backend devuelve: { success: true, data: { user, tokens } }
+                    const usuario = data.data.user;
+                    const token = data.data.tokens.accessToken;
+
+                    state.user = usuario;
+                    state.token = token;
+                    localStorage.setItem('user', JSON.stringify(usuario));
+                    localStorage.setItem('token', token);
 
                     messageDiv.className = "auth-message success";
                     messageDiv.textContent = "[EXITO] Sesión iniciada correctamente";
@@ -2215,7 +2372,7 @@
                     setTimeout(() => {
                         updateUserUI();
                         closeAuthModal();
-                        addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                        addNotification("[EXITO] Bienvenido " + usuario.firstName, "success");
                     }, 500);
                 } else {
                     messageDiv.className = "auth-message error";
@@ -2243,6 +2400,7 @@
             const contrasena = document.getElementById("registerPassword").value;
             const direccion = document.getElementById("registerDireccion").value.trim() || "No especificado";
             const telefono = document.getElementById("registerTelefono").value.trim() || "No especificado";
+            const rol = document.getElementById("registerRol").value;
 
             // Validaciones
             if (!nombre || nombre.length < 2) {
@@ -2251,9 +2409,9 @@
                 return;
             }
 
-            if (!apellido || apellido.length < 2) {
+            if (!apellido || apellido.length < 1) {
                 messageDiv.className = "auth-message error";
-                messageDiv.textContent = "[ERROR] Apellido debe tener al menos 2 caracteres";
+                messageDiv.textContent = "[ERROR] Ingresa tu apellido";
                 return;
             }
 
@@ -2273,31 +2431,37 @@
             btn.textContent = "Registrando...";
             messageDiv.textContent = "";
 
+            // Mapear campos al formato del backend (inglés)
             const userData = {
-                nombre: nombre,
-                apellido: apellido,
+                firstName: nombre,
+                lastName: apellido,
                 email: email,
-                contrasena: contrasena,
-                direccion: direccion,
-                telefono: telefono,
-                rol: "usuario"
+                password: contrasena,
+                phone: telefono,
+                role: rol
             };
 
+            console.log("Enviando datos de registro:", userData);
+
             try {
-                const response = await fetch(`${API_URL}/api/auth/register`, {
+                const response = await fetch(`${AUTH_URL}/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
                 });
 
                 const data = await response.json();
+                console.log("Respuesta del servidor:", response.status, data);
 
-                if (response.ok && data.usuario && data.token) {
-                    // Auto login
-                    state.user = data.usuario;
-                    state.token = data.token;
-                    localStorage.setItem('user', JSON.stringify(data.usuario));
-                    localStorage.setItem('token', data.token);
+                if (response.ok && data.success && data.data) {
+                    // El backend devuelve: { success: true, data: { user, tokens } }
+                    const usuario = data.data.user;
+                    const token = data.data.tokens.accessToken;
+
+                    state.user = usuario;
+                    state.token = token;
+                    localStorage.setItem('user', JSON.stringify(usuario));
+                    localStorage.setItem('token', token);
 
                     messageDiv.className = "auth-message success";
                     messageDiv.textContent = "[EXITO] Cuenta creada correctamente";
@@ -2305,11 +2469,21 @@
                     setTimeout(() => {
                         updateUserUI();
                         closeAuthModal();
-                        addNotification("[EXITO] Bienvenido " + data.usuario.nombre, "success");
+                        addNotification("[EXITO] Bienvenido " + usuario.firstName, "success");
                     }, 500);
                 } else {
+                    // Mostrar mensaje de error más detallado
+                    let errorMsg = "Error al registrar";
+                    if (data.message) {
+                        errorMsg = data.message;
+                    } else if (data.errors && Array.isArray(data.errors)) {
+                        errorMsg = data.errors.join(", ");
+                    } else if (data.error) {
+                        errorMsg = data.error;
+                    }
                     messageDiv.className = "auth-message error";
-                    messageDiv.textContent = "[ERROR] " + (data.message || "Error al registrar");
+                    messageDiv.textContent = "[ERROR] " + errorMsg;
+                    console.error("Error de registro:", data);
                 }
             } catch (error) {
                 messageDiv.className = "auth-message error";
@@ -2325,16 +2499,58 @@
             const userSection = document.getElementById("userSection");
 
             if (state.user) {
+                // El backend puede devolver firstName/lastName o nombre/apellido
+                const nombre = state.user.firstName || state.user.nombre || state.user.name || 'Usuario';
+                const apellido = state.user.lastName || state.user.apellido || state.user.surname || '';
+
                 userSection.innerHTML = `
                     <div class="user-profile">
-                        <span>${state.user.nombre} ${state.user.apellido}</span>
+                        <span>${nombre} ${apellido}</span>
                         <button class="btn-logout" onclick="handleLogout()">Salir</button>
                     </div>
                 `;
+
+                // Mostrar/ocultar elementos según el rol
+                updateRoleBasedUI();
             } else {
                 userSection.innerHTML = `
                     <button class="btn-login" onclick="showLoginModal()">Iniciar Sesión</button>
                 `;
+            }
+        }
+
+        // Nueva función para actualizar la UI basada en el rol
+        function updateRoleBasedUI() {
+            if (!state.user) return;
+
+            const rol = state.user.role || state.user.rol || '';
+            const esVendedor = rol === 'emprendedor' || rol === 'vendedor';
+            const esCliente = rol === 'user' || rol === 'usuario' || rol === 'cliente' || rol === '';
+
+            // Elementos solo para vendedores
+            const vendedorItems = document.querySelectorAll('.vendedor-only');
+            vendedorItems.forEach(item => {
+                item.style.display = esVendedor ? 'block' : 'none';
+            });
+
+            // Elementos solo para clientes
+            const clienteItems = document.querySelectorAll('.cliente-only');
+            clienteItems.forEach(item => {
+                item.style.display = esCliente ? 'block' : 'none';
+            });
+
+            // Si es vendedor, cargar sus estadísticas y ocultar botones de compra
+            if (esVendedor) {
+                loadVendorStatistics();
+                // Ocultar botones de agregar al carrito en productos
+                document.querySelectorAll('.btn-add-cart').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            } else {
+                // Mostrar botones de agregar al carrito para clientes
+                document.querySelectorAll('.btn-add-cart').forEach(btn => {
+                    btn.style.display = 'block';
+                });
             }
         }
 
@@ -2453,24 +2669,24 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div>
                                 <p style="margin: 5px 0; font-size: 12px; color: #666;">Nombre</p>
-                                <p style="margin: 5px 0; font-weight: bold;">${user.nombre} ${user.apellido || ''}</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.firstName || user.nombre || 'Usuario'} ${user.lastName || user.apellido || ''}</p>
                             </div>
                             <div>
                                 <p style="margin: 5px 0; font-size: 12px; color: #666;">Email</p>
-                                <p style="margin: 5px 0; font-weight: bold;">${user.email}</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.email || 'No especificado'}</p>
                             </div>
                             <div>
                                 <p style="margin: 5px 0; font-size: 12px; color: #666;">Teléfono</p>
-                                <p style="margin: 5px 0; font-weight: bold;">${user.telefono || 'No especificado'}</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.phone || user.telefono || 'No especificado'}</p>
                             </div>
                             <div>
                                 <p style="margin: 5px 0; font-size: 12px; color: #666;">Rol</p>
-                                <p style="margin: 5px 0; font-weight: bold;">${user.rol}</p>
+                                <p style="margin: 5px 0; font-weight: bold;">${user.role || user.rol || 'Usuario'}</p>
                             </div>
                         </div>
                         <div style="margin-top: 15px;">
                             <p style="margin: 5px 0; font-size: 12px; color: #666;">Dirección</p>
-                            <p style="margin: 5px 0; font-weight: bold;">${user.direccion || 'No especificado'}</p>
+                            <p style="margin: 5px 0; font-weight: bold;">${user.address || user.direccion || 'No especificado'}</p>
                         </div>
                     </div>
 
@@ -2503,11 +2719,11 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Nombre</label>
-                            <input type="text" id="editNombre" value="${user.nombre || ''}" placeholder="Nombre" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                            <input type="text" id="editNombre" value="${user.firstName || user.nombre || ''}" placeholder="Nombre" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Apellido</label>
-                            <input type="text" id="editApellido" value="${user.apellido || ''}" placeholder="Apellido" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                            <input type="text" id="editApellido" value="${user.lastName || user.apellido || ''}" placeholder="Apellido" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
                         </div>
                     </div>
 
@@ -2519,12 +2735,12 @@
 
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Teléfono</label>
-                        <input type="tel" id="editTelefono" value="${user.telefono || ''}" placeholder="Ej: +34 612 345 678" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                        <input type="tel" id="editTelefono" value="${user.phone || user.telefono || ''}" placeholder="Ej: +34 612 345 678" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Dirección</label>
-                        <input type="text" id="editDireccion" value="${user.direccion || ''}" placeholder="Calle, número, ciudad" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                        <input type="text" id="editDireccion" value="${user.address || user.direccion || ''}" placeholder="Calle, número, ciudad" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
@@ -2562,10 +2778,14 @@
                 return;
             }
 
-            // Actualizar el estado local
+            // Actualizar el estado local con ambos formatos (compatibilidad)
+            state.user.firstName = nombre;
             state.user.nombre = nombre;
+            state.user.lastName = apellido;
             state.user.apellido = apellido;
+            state.user.phone = telefono;
             state.user.telefono = telefono;
+            state.user.address = direccion;
             state.user.direccion = direccion;
 
             // Guardar en localStorage
@@ -2573,10 +2793,10 @@
 
             // Preparar datos para enviar al servidor
             const updateData = {
-                nombre,
-                apellido,
-                telefono,
-                direccion
+                firstName: nombre,
+                lastName: apellido,
+                phone: telefono,
+                address: direccion
             };
 
             // Si hay contraseña nueva, agregarla
@@ -2588,7 +2808,8 @@
             }
 
             // Enviar al servidor si es posible
-            fetch(`${API_URL}/api/usuario/${state.user.id}`, {
+            const userId = state.user.id || state.user.idUsuario;
+            fetch(`${AUTH_URL}/auth/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2603,6 +2824,7 @@
                     } else {
                         addNotification("[EXITO] Perfil actualizado correctamente", "success");
                         closeEditProfileModal();
+                        updateUserUI();
                         // Recargar perfil
                         loadPerfil();
                     }
@@ -2611,6 +2833,7 @@
                     // Si falla el servidor, al menos guardó en localStorage
                     addNotification("[EXITO] Cambios guardados localmente (servidor no responde)", "success");
                     closeEditProfileModal();
+                    updateUserUI();
                     loadPerfil();
                 });
         }
@@ -2710,7 +2933,7 @@
 
             // Obtener datos del estado actual y del servidor
             let totalOrdenes = state.orders ? state.orders.length : 0;
-            let totalProductos = state.productos ? state.productos.length : 0;
+            let totalProductos = state.products ? state.products.length : 0;
             let totalIngresos = state.orders ? state.orders.reduce((sum, o) => sum + (o.total || 0), 0) : 0;
             let ticketPromedio = totalOrdenes > 0 ? totalIngresos / totalOrdenes : 0;
 
@@ -2811,7 +3034,7 @@
             list.innerHTML = filtered.map(p => `
                 <div class="product-card">
                     <div class="product-image">
-                        ${p.emoji}
+                        ${p.emoji || '🛍️'}
                         ${p.stock <= 5 ? '<span class="product-badge">Pocas unidades</span>' : ''}
                     </div>
                     <div class="product-info">
@@ -2819,7 +3042,7 @@
                         <div class="product-price">$${p.precio.toFixed(2)}</div>
                         <div class="product-stock">Stock: ${p.stock}</div>
                         <div class="product-actions">
-                            <button class="btn-buy" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
+                            <button class="btn-buy btn-add-cart" onclick="addToCart('${p.id}', '${p.nombre}', ${p.precio})">
                                 <i class="fas fa-cart-plus"></i> Comprar
                             </button>
                             <button class="btn-wishlist">
@@ -2829,6 +3052,9 @@
                     </div>
                 </div>
             `).join("");
+            
+            // Actualizar visibilidad de botones según el rol
+            updateRoleBasedUI();
         }
 
         function filterOrdersByStatus(status) {
@@ -2881,10 +3107,200 @@
             }).join("");
         }
 
+        // ========== FUNCIONES DE VENDEDOR ==========
+        async function handleAddProduct(event) {
+            event.preventDefault();
+
+            if (!state.user || !state.token) {
+                addNotification("[ERROR] Debes iniciar sesión como vendedor", "error");
+                return;
+            }
+
+            const rol = state.user.role || state.user.rol || '';
+            if (rol !== 'emprendedor' && rol !== 'vendedor') {
+                addNotification("[ERROR] Solo los vendedores pueden agregar productos", "error");
+                return;
+            }
+
+            const nombre = document.getElementById("prodNombre").value.trim();
+            const descripcion = document.getElementById("prodDescripcion").value.trim();
+            const precio = parseFloat(document.getElementById("prodPrecio").value);
+            const stock = parseInt(document.getElementById("prodStock").value);
+            const categoriaId = parseInt(document.getElementById("prodCategoria").value);
+
+            if (!nombre || !descripcion || !precio || precio <= 0 || !stock || stock < 0 || !categoriaId) {
+                addNotification("[ERROR] Completa todos los campos correctamente", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/producto`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        descripcion,
+                        precio,
+                        stock,
+                        categoriaId,
+                        emprendedorId: state.user.id || state.user.idUsuario
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addNotification("[EXITO] Producto agregado correctamente", "success");
+                    // Limpiar formulario
+                    document.getElementById("prodNombre").value = "";
+                    document.getElementById("prodDescripcion").value = "";
+                    document.getElementById("prodPrecio").value = "";
+                    document.getElementById("prodStock").value = "";
+                    document.getElementById("prodCategoria").value = "1";
+                    // Recargar productos
+                    loadProducts();
+                } else {
+                    addNotification("[ERROR] " + (data.message || "Error al agregar producto"), "error");
+                }
+            } catch (error) {
+                console.error("Error al agregar producto:", error);
+                addNotification("[ERROR] Error de conexión al agregar producto", "error");
+            }
+        }
+
+        // Función para cargar productos desde el servidor o WebSocket
+        async function loadProducts() {
+            try {
+                // Intentar obtener productos del servidor REST API
+                const response = await fetch(`${API_URL}/api/producto`, {
+                    headers: state.token ? { 'Authorization': `Bearer ${state.token}` } : {}
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        state.products = data.map(p => ({
+                            id: p.idProducto || p.id,
+                            nombre: p.nombreProducto || p.nombre,
+                            precio: parseFloat(p.precio),
+                            stock: p.stock,
+                            emoji: p.emoji || '🛍️'
+                        }));
+                        renderProducts();
+                        updateStats({});
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+                // Si falla el REST API, intentar por WebSocket
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ action: "get_products" }));
+                }
+            }
+        }
+
+        async function loadVendorStatistics() {
+            if (!state.user || !state.token) return;
+
+            const rol = state.user.role || state.user.rol || '';
+            if (rol !== 'emprendedor' && rol !== 'vendedor') return;
+
+            try {
+                // Obtener órdenes del vendedor
+                const response = await fetch(`${API_URL}/api/orden`, {
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+
+                if (!response.ok) {
+                    console.error("Error al cargar estadísticas de vendedor");
+                    return;
+                }
+
+                const ordenes = await response.json();
+
+                // Filtrar órdenes del vendedor actual (esto depende de cómo esté estructurada tu API)
+                const ordenesVendedor = Array.isArray(ordenes) ? ordenes : [];
+
+                // Calcular estadísticas generales
+                const totalVentas = ordenesVendedor.reduce((sum, orden) => sum + (orden.total || 0), 0);
+                const cantidadOrdenes = ordenesVendedor.length;
+                const promedioOrden = cantidadOrdenes > 0 ? totalVentas / cantidadOrdenes : 0;
+
+                // Actualizar tarjetas de "Mis Ventas"
+                document.getElementById("totalVentasVendedor").textContent = `$${totalVentas.toFixed(2)}`;
+                document.getElementById("cantidadOrdenesVendedor").textContent = cantidadOrdenes;
+                document.getElementById("promedioOrdenVendedor").textContent = `$${promedioOrden.toFixed(2)}`;
+
+                // Calcular estadísticas del mes actual
+                const fechaActual = new Date();
+                const mesActual = fechaActual.getMonth();
+                const añoActual = fechaActual.getFullYear();
+
+                const ordenesMesActual = ordenesVendedor.filter(orden => {
+                    const fechaOrden = new Date(orden.timestamp || orden.createdAt);
+                    return fechaOrden.getMonth() === mesActual && fechaOrden.getFullYear() === añoActual;
+                });
+
+                const ingresosMes = ordenesMesActual.reduce((sum, orden) => sum + (orden.total || 0), 0);
+                const productosVendidosMes = ordenesMesActual.reduce((sum, orden) => {
+                    if (orden.items && Array.isArray(orden.items)) {
+                        return sum + orden.items.reduce((itemSum, item) => itemSum + (item.cantidad || 0), 0);
+                    }
+                    return sum;
+                }, 0);
+
+                // Calcular crecimiento (comparar con mes anterior)
+                const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+                const añoMesAnterior = mesActual === 0 ? añoActual - 1 : añoActual;
+
+                const ordenesMesAnterior = ordenesVendedor.filter(orden => {
+                    const fechaOrden = new Date(orden.timestamp || orden.createdAt);
+                    return fechaOrden.getMonth() === mesAnterior && fechaOrden.getFullYear() === añoMesAnterior;
+                });
+
+                const ingresosMesAnterior = ordenesMesAnterior.reduce((sum, orden) => sum + (orden.total || 0), 0);
+                const crecimiento = ingresosMesAnterior > 0
+                    ? ((ingresosMes - ingresosMesAnterior) / ingresosMesAnterior * 100).toFixed(1)
+                    : 0;
+
+                // Actualizar tarjetas de estadísticas
+                document.getElementById("ingresosMes").textContent = `$${ingresosMes.toFixed(2)}`;
+                document.getElementById("productosVendidosMes").textContent = productosVendidosMes;
+                document.getElementById("crecimientoMes").textContent = `${crecimiento}%`;
+
+                // Calcular ventas por categoría (simplificado)
+                const ventasPorCategoria = {};
+                ordenesVendedor.forEach(orden => {
+                    if (orden.items && Array.isArray(orden.items)) {
+                        orden.items.forEach(item => {
+                            const categoria = item.categoria || 'Sin categoría';
+                            ventasPorCategoria[categoria] = (ventasPorCategoria[categoria] || 0) + (item.cantidad || 0);
+                        });
+                    }
+                });
+
+                // Mostrar top 3 categorías
+                const topCategorias = Object.entries(ventasPorCategoria)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([cat, cant]) => `${cat}: ${cant}`)
+                    .join(', ');
+
+                document.getElementById("ventasPorCategoria").textContent = topCategorias || 'Sin datos';
+
+            } catch (error) {
+                console.error("Error al cargar estadísticas de vendedor:", error);
+            }
+        }
+
         // ========== INICIALIZACIÓN ==========
         document.addEventListener("DOMContentLoaded", () => {
             loadUser();  // Cargar usuario guardado
             connectWebSocket();
+            loadProducts(); // Cargar productos iniciales
             // Actualizar stats cada 5 segundos
             setInterval(() => {
                 updateStats({ total_clients: state.clientsOnline });

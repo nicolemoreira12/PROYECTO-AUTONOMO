@@ -63,6 +63,16 @@ app.get('/chat', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../views/chat.html'));
 });
 
+// Servir dashboard completo
+app.get('/dashboard', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../views/dashboard.html'));
+});
+
+// Ruta raíz redirige al dashboard
+app.get('/', (req: Request, res: Response) => {
+    res.redirect('/dashboard');
+});
+
 // ==================== SOCKET.IO ====================
 
 io.on('connection', (socket) => {
@@ -138,6 +148,9 @@ const startServer = async () => {
             console.log(`🧠 LLM Provider: ${process.env.DEFAULT_LLM_PROVIDER || 'gemini'}`);
             console.log(`🔌 WebSocket habilitado para chat en tiempo real`);
             console.log(`📞 Endpoints disponibles:`);
+            console.log(`   GET  /                      - Dashboard principal`);
+            console.log(`   GET  /dashboard             - Dashboard completo`);
+            console.log(`   GET  /chat                  - Chat simple`);
             console.log(`   POST /api/chat/message      - Enviar mensaje de chat`);
             console.log(`   GET  /api/chat/history/:id  - Obtener historial`);
             console.log(`   GET  /api/tools             - Listar herramientas MCP`);

@@ -14,17 +14,17 @@ import { Transaccion } from "../entities/Transaccion";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT) || 5432,
+  host: process.env.DB_HOST || "aws-0-us-east-1.pooler.supabase.com",
+  port: Number(process.env.DB_PORT) || 6543,
   username: process.env.DB_USER || "postgres.rvyietphxsbrrehlaeji",
   password: process.env.DB_PASS || "XNxVcxgoKwhzv60G",
-  database: process.env.DB_NAME || "aws-1-us-east-1.pooler.supabase.com",
+  database: process.env.DB_NAME || "postgres",
   synchronize: true,
   logging: true,
   // Configuración SSL para Supabase (requerido para conexiones remotas)
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false },
   // A veces los poolers (ej. Supabase) requieren pasar ssl también en `extra` para el cliente pg
-  extra: process.env.DB_SSL === "true" ? { ssl: { rejectUnauthorized: false } } : undefined,
+  extra: { ssl: { rejectUnauthorized: false } },
   entities: [
     Usuario,
     Producto,

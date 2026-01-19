@@ -11,7 +11,7 @@ import { Emprendedor } from '../entities/Emprendedor';
  */
 
 const productosNuevos = [
-    
+
     {
         nombre: 'Laptop HP Pavilion 15',
         descripcion: 'Laptop con procesador Intel Core i5, 8GB RAM, 256GB SSD, pantalla Full HD 15.6"',
@@ -88,12 +88,12 @@ async function limpiarProductos() {
 async function crearCategoriasSiNoExisten() {
     console.log('📂 Verificando categorías...');
     const categoriaRepo = AppDataSource.getRepository(Categoria);
-    
+
     const categoriasNecesarias = ['Electrónica', 'Hogar', 'Libros', 'Ropa'];
-    
+
     for (const nombreCat of categoriasNecesarias) {
         let categoria = await categoriaRepo.findOne({ where: { nombreCategoria: nombreCat } });
-        
+
         if (!categoria) {
             categoria = categoriaRepo.create({
                 nombreCategoria: nombreCat,
@@ -108,9 +108,9 @@ async function crearCategoriasSiNoExisten() {
 async function obtenerOCrearEmprendedor() {
     console.log('👤 Verificando emprendedor...');
     const emprendedorRepo = AppDataSource.getRepository(Emprendedor);
-    
+
     let emprendedor = await emprendedorRepo.findOne({ where: {} });
-    
+
     if (!emprendedor) {
         emprendedor = emprendedorRepo.create({
             nombreTienda: 'Tienda Principal',
@@ -120,27 +120,27 @@ async function obtenerOCrearEmprendedor() {
         await emprendedorRepo.save(emprendedor);
         console.log('✅ Emprendedor creado');
     }
-    
+
     return emprendedor;
 }
 
 async function insertarProductos() {
     console.log('📦 Insertando nuevos productos...');
-    
+
     const productoRepo = AppDataSource.getRepository(Producto);
     const categoriaRepo = AppDataSource.getRepository(Categoria);
     const emprendedor = await obtenerOCrearEmprendedor();
-    
+
     for (const prodData of productosNuevos) {
-        const categoria = await categoriaRepo.findOne({ 
-            where: { nombreCategoria: prodData.categoriaNombre } 
+        const categoria = await categoriaRepo.findOne({
+            where: { nombreCategoria: prodData.categoriaNombre }
         });
-        
+
         if (!categoria) {
             console.log(`⚠️  Categoría no encontrada: ${prodData.categoriaNombre}`);
             continue;
         }
-        
+
         const producto = productoRepo.create({
             nombreProducto: prodData.nombre,
             descripcion: prodData.descripcion,
@@ -150,7 +150,7 @@ async function insertarProductos() {
             categoria: categoria,
             emprendedor: emprendedor,
         });
-        
+
         await productoRepo.save(producto);
         console.log(`✅ Producto creado: ${prodData.nombre} - $${prodData.precio}`);
     }
@@ -159,25 +159,25 @@ async function insertarProductos() {
 async function main() {
     try {
         console.log('🚀 Iniciando seed de productos...\n');
-        
+
         // Conectar a la base de datos
         await AppDataSource.initialize();
         console.log('✅ Conectado a la base de datos\n');
-        
+
         // 1. Limpiar productos existentes
         await limpiarProductos();
         console.log('');
-        
+
         // 2. Crear categorías si no existen
         await crearCategoriasSiNoExisten();
         console.log('');
-        
+
         // 3. Insertar nuevos productos
         await insertarProductos();
         console.log('');
-        
+
         console.log('🎉 ¡Productos actualizados exitosamente!');
-        
+
     } catch (error) {
         console.error('❌ Error:', error);
     } finally {

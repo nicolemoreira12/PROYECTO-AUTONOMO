@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Marketplace - Dashboard Completo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
+
+        .wrapper { display: flex; height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-left-color: #fff;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header h1 { font-size: 22px; }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .btn-login {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* STATS CARDS */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* CHAT SECTION */
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar { background: #667eea; }
+        .message.assistant .message-avatar { background: #764ba2; }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .chat-input:focus { border-color: #667eea; }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* PRODUCTS */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .product-info { padding: 12px; }
+        
+        .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .btn-buy {
+            width: 100%;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .btn-buy:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .auth-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .auth-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        .auth-message.success {
+            background: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .order-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .order-status.completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .order-status.pending {
+            background: #fef08a;
+            color: #854d0e;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-robot"></i>
+                AI Marketplace
+            </div>
+            <div class="sidebar-menu">
+                <div class="sidebar-item active" onclick="switchTab('dashboard')">
+                    <i class="fas fa-home"></i> Dashboard
+                </div>
+                <div class="sidebar-item" onclick="switchTab('chat')">
+                    <i class="fas fa-comments"></i> Chat AI
+                </div>
+                <div class="sidebar-item" onclick="switchTab('productos')">
+                    <i class="fas fa-shopping-bag"></i> Productos
+                </div>
+                <div class="sidebar-item" onclick="switchTab('ordenes')">
+                    <i class="fas fa-receipt"></i> Órdenes
+                </div>
+                <div class="sidebar-item" onclick="switchTab('historial')">
+                    <i class="fas fa-history"></i> Mis Compras
+                </div>
+                <div class="sidebar-item" onclick="switchTab('perfil')">
+                    <i class="fas fa-user"></i> Perfil
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="header">
+                <h1>AI Marketplace Dashboard</h1>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="connection-status">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="connectionText">CONECTADO</span>
+                    </div>
+                    <div id="userSection">
+                        <button class="btn-login" onclick="showLoginModal()">Iniciar Sesión</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <!-- DASHBOARD TAB -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-label">Productos Totales</div>
+                            <div class="stat-value" id="totalProducts">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Órdenes Totales</div>
+                            <div class="stat-value" id="totalOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Ingresos Totales</div>
+                            <div class="stat-value" id="totalRevenue">$0.00</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">AI Provider</div>
+                            <div class="stat-value" style="font-size: 18px;" id="aiProvider">Gemini</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🚀 Resumen del Sistema</h3>
+                        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                            Este dashboard integra todas las funcionalidades del marketplace con el asistente AI.
+                            Puedes consultar productos, crear órdenes, procesar pagos y obtener reportes en tiempo real.
+                        </p>
+                        <ul style="margin-top: 15px; padding-left: 20px; color: #666; font-size: 14px; line-height: 1.8;">
+                            <li><strong>Chat AI:</strong> Asistente inteligente con acceso a herramientas MCP</li>
+                            <li><strong>Productos:</strong> Catálogo completo con 8 productos disponibles</li>
+                            <li><strong>Órdenes:</strong> Sistema de gestión de pedidos en tiempo real</li>
+                            <li><strong>Pagos:</strong> Integración con servicio de pagos</li>
+                            <li><strong>Reportes:</strong> Analytics y resumen de ventas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- CHAT TAB -->
+                <div id="chat" class="tab-content">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div style="text-align: center; color: #666; padding: 20px; font-size: 14px;">
+                                ¡Hola! Soy tu asistente de IA. Puedo ayudarte a:<br>
+                                • Buscar productos<br>
+                                • Consultar órdenes<br>
+                                • Crear nuevas compras<br>
+                                • Procesar pagos<br>
+                                • Generar reportes de ventas<br><br>
+                                ¿En qué puedo ayudarte hoy?
+                            </div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
+                            <button class="send-button" id="sendButton">➤</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTOS TAB -->
+                <div id="productos" class="tab-content">
+                    <div class="card">
+                        <h3>🛍️ Catálogo de Productos</h3>
+                        <div class="products-grid" id="productsList">
+                            <div class="empty-state">
+                                <p>Cargando productos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÓRDENES TAB -->
+                <div id="ordenes" class="tab-content">
+                    <div class="card">
+                        <h3>📦 Órdenes Recientes</h3>
+                        <div class="orders-list" id="ordersList">
+                            <div class="empty-state">
+                                <p>No hay órdenes disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL TAB -->
+                <div id="historial" class="tab-content">
+                    <div class="card">
+                        <h3>🛒 Mis Compras</h3>
+                        <div id="historialList">
+                            <div class="empty-state">
+                                <p>No has realizado compras aún</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PERFIL TAB -->
+                <div id="perfil" class="tab-content">
+                    <div class="card">
+                        <h3>👤 Mi Perfil</h3>
+                        <div id="profileContent">
+                            <div class="empty-state">
+                                <p>Inicia sesión para ver tu perfil</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AUTENTICACIÓN -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Iniciar Sesión</h2>
+                <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            </div>
+            <div class="auth-message" id="authMessage"></div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-submit" id="loginBtn">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURACIÓN ==========
+        const API_URL = 'http://localhost:6000/api/chat';
+        const MARKETPLACE_API = 'http://localhost:3000/api';
+        const AUTH_API = 'http://localhost:4000/api/auth';
+        
+        let conversationId = 'conv-' + Date.now();
+        let isTyping = false;
+
+        // Estado global
+        const state = {
+            products: [],
+            orders: [],
+            user: null,
+            token: null,
+            currentTab: 'dashboard'
+        };
+
+        // Cargar usuario desde localStorage
+        function loadUser() {
+            const savedUser = localStorage.getItem('user');
+            const savedToken = localStorage.getItem('token');
+            if (savedUser && savedToken) {
+                state.user = JSON.parse(savedUser);
+                state.token = savedToken;
+                updateUserUI();
+            }
+        }
+
+        // ========== UI FUNCTIONS ==========
+        function switchTab(tabName) {
+            state.currentTab = tabName;
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+            document.getElementById(tabName).classList.add("active");
+            document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
+            event.target.closest(".sidebar-item").classList.add("active");
+
+            if (tabName === 'productos') loadProducts();
+            if (tabName === 'ordenes') loadOrders();
+            if (tabName === 'historial') loadHistorial();
+            if (tabName === 'perfil') loadPerfil();
+        }
+
+        function updateUserUI() {
+            const userSection = document.getElementById("userSection");
+            if (state.user) {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <i class="fas fa-user-circle"></i>
+                        <span>${state.user.nombre || state.user.email}</span>
+                    </div>
+                `;
+            } else {
+                userSection.innerHTML = `<button class="btn-login" onclick="showLoginModal()">Iniciar Sesión</button>`;
+            }
+        }
+
+        // ========== CHAT FUNCTIONS ==========
+        function addMessage(content, role, tools = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+
+            if (tools && tools.length > 0) {
+                const toolsDiv = document.createElement('div');
+                toolsDiv.style.cssText = 'font-size: 12px; color: #6b7280; margin-top: 5px; font-style: italic;';
+                toolsDiv.textContent = `🔧 Herramientas: ${tools.join(', ')}`;
+                messageContent.appendChild(toolsDiv);
+            }
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            document.getElementById('chatMessages').appendChild(messageDiv);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        async function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            if (!message || isTyping) return;
+
+            addMessage(message, 'user');
+            chatInput.value = '';
+            isTyping = true;
+            document.getElementById('sendButton').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        conversationId,
+                        message,
+                        messageType: 'text'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    conversationId = data.conversationId;
+                    addMessage(data.response, 'assistant', data.toolsUsed);
+                    
+                    // Actualizar dashboard si se usaron herramientas
+                    if (data.toolsUsed && data.toolsUsed.length > 0) {
+                        updateStats();
+                    }
+                } else {
+                    addMessage('Lo siento, ocurrió un error.', 'assistant');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Error de conexión con el servidor.', 'assistant');
+            } finally {
+                isTyping = false;
+                document.getElementById('sendButton').disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        // ========== PRODUCTS FUNCTIONS ==========
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${MARKETPLACE_API}/producto`);
+                const data = await response.json();
+                state.products = data;
+                renderProducts();
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function renderProducts() {
+            const list = document.getElementById("productsList");
+            if (state.products.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No hay productos disponibles</p></div>';
+                return;
+            }
+
+            list.innerHTML = state.products.map(p => `
+                <div class="product-card">
+                    <div class="product-image">📦</div>
+                    <div class="product-info">
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-price">$${p.precio}</div>
+                        <div style="font-size: 12px; color: #999;">Stock: ${p.stock || 0}</div>
+                        <button class="btn-buy" onclick="addToCart(${p.id}, '${p.nombre}', ${p.precio})">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function addToCart(id, name, price) {
+            addMessage(`Agregar al carrito: ${name} - $${price}`, 'user');
+            addMessage(`Producto agregado. Usa el chat para crear una orden: "Crear orden con ${name}"`, 'assistant');
+        }
+
+        // ========== ORDERS FUNCTIONS ==========
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${MARKETPLACE_API}/orden`);
+                const data = await response.json();
+                state.orders = data;
+                renderOrders();
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function renderOrders() {
+            const list = document.getElementById("ordersList");
+            if (state.orders.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No hay órdenes disponibles</p></div>';
+                return;
+            }
+
+            list.innerHTML = state.orders.slice(-10).reverse().map(o => `
+                <div class="order-item">
+                    <div>
+                        <div style="font-weight: 600;">Orden #${o.id}</div>
+                        <div style="font-size: 12px; color: #999;">${new Date(o.fechaOrden || Date.now()).toLocaleDateString()}</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: bold; color: #667eea;">$${o.total || 0}</div>
+                    <div class="order-status ${o.estado || 'pending'}">${o.estado || 'Pendiente'}</div>
+                </div>
+            `).join("");
+        }
+
+        function loadHistorial() {
+            if (!state.user) {
+                document.getElementById("historialList").innerHTML = '<div class="empty-state"><p>Inicia sesión para ver tus compras</p></div>';
+                return;
+            }
+            document.getElementById("historialList").innerHTML = '<div class="empty-state"><p>No has realizado compras aún</p></div>';
+        }
+
+        function loadPerfil() {
+            const profileContent = document.getElementById("profileContent");
+            if (!state.user) {
+                profileContent.innerHTML = '<div class="empty-state"><p>Inicia sesión para ver tu perfil</p></div>';
+                return;
+            }
+            profileContent.innerHTML = `
+                <div style="padding: 20px;">
+                    <h4>Información Personal</h4>
+                    <p><strong>Nombre:</strong> ${state.user.nombre || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${state.user.email}</p>
+                    <p><strong>Rol:</strong> ${state.user.rol || 'cliente'}</p>
+                </div>
+            `;
+        }
+
+        // ========== AUTH FUNCTIONS ==========
+        function showLoginModal() {
+            document.getElementById("authModal").style.display = "block";
+        }
+
+        function closeAuthModal() {
+            document.getElementById("authModal").style.display = "none";
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            const btn = document.getElementById("loginBtn");
+            const messageDiv = document.getElementById("authMessage");
+
+            btn.disabled = true;
+            btn.textContent = "Verificando...";
+
+            try {
+                const response = await fetch(`${AUTH_API}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, contrasena: password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    state.user = data.usuario;
+                    state.token = data.token;
+                    localStorage.setItem('user', JSON.stringify(data.usuario));
+                    localStorage.setItem('token', data.token);
+                    
+                    messageDiv.textContent = "¡Inicio de sesión exitoso!";
+                    messageDiv.className = "auth-message success";
+                    
+                    updateUserUI();
+                    setTimeout(() => closeAuthModal(), 1500);
+                } else {
+                    messageDiv.textContent = data.message || "Credenciales incorrectas";
+                    messageDiv.className = "auth-message error";
+                }
+            } catch (error) {
+                messageDiv.textContent = "Error de conexión";
+                messageDiv.className = "auth-message error";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Iniciar Sesión";
+            }
+        }
+
+        // ========== STATS UPDATE ==========
+        async function updateStats() {
+            try {
+                const [productsRes, ordersRes] = await Promise.all([
+                    fetch(`${MARKETPLACE_API}/producto`),
+                    fetch(`${MARKETPLACE_API}/orden`)
+                ]);
+
+                const products = await productsRes.json();
+                const orders = await ordersRes.json();
+
+                state.products = products;
+                state.orders = orders;
+
+                document.getElementById('totalProducts').textContent = products.length;
+                document.getElementById('totalOrders').textContent = orders.length;
+                
+                const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+                document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // ========== INIT ==========
+        document.addEventListener("DOMContentLoaded", () => {
+            loadUser();
+            updateStats();
+            
+            // Chat input listeners
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Actualizar stats cada 30 segundos
+            setInterval(updateStats, 30000);
+        });
+
+        // Cerrar modal al hacer click afuera
+        window.onclick = function(event) {
+            const modal = document.getElementById("authModal");
+            if (event.target == modal) {
+                closeAuthModal();
+            }
+        };
+    </script>
+</body>
+</html>
