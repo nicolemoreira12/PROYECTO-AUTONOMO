@@ -1,0 +1,85 @@
+{
+  "name": "MCP Input Handler (Simplified)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-input",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook MCP Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "mcp-input-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extraer mensaje del body\nconst message = items[0].json.body.message || items[0].json.body.text || 'Sin mensaje';\nconst userId = items[0].json.body.userId || 'anonymous';\n\nreturn [{\n  json: {\n    message: message,\n    userId: userId,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Extraer Contenido",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://localhost:6000/api/chat/message",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"message\": \"{{$json.message}}\",\n  \"userId\": \"{{$json.userId}}\",\n  \"messageType\": \"text\"\n}"
+      },
+      "name": "Enviar a AI Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Webhook MCP Input": {
+      "main": [
+        [
+          {
+            "node": "Extraer Contenido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Contenido": {
+      "main": [
+        [
+          {
+            "node": "Enviar a AI Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a AI Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

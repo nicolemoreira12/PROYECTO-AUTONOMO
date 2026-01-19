@@ -1077,6 +1077,10 @@
                         <div class="status-dot" id="statusDot"></div>
                         <span id="connectionText">Conectando...</span>
                     </div>
+                    <!-- Bot\u00f3n de Asistente IA -->
+                    <button class="btn-ai-assistant" onclick="openAIAssistant()" id="aiAssistantBtn" style="padding: 8px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.3s; box-shadow: 0 2px 5px rgba(102,126,234,0.3);">
+                        <i class="fas fa-robot"></i> Asistente IA
+                    </button>
                     <div class="cart-icon cliente-only" onclick="toggleCart()" style="display: none;">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-badge" id="cartCount">0</span>
@@ -1091,6 +1095,38 @@
             <div class="content">
                 <!-- DASHBOARD TAB -->
                 <div id="dashboard" class="tab-content active">
+                    <!-- Estado de Microservicios -->
+                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                            <h3 style="margin: 0; border: none; padding: 0;">🔌 Estado de Microservicios</h3>
+                            <button onclick="checkServicesHealth()" style="background: white; color: #667eea; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                <i class="fas fa-sync-alt"></i> Actualizar
+                            </button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;">
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 5px;" id="wsStatus">⚪</div>
+                                <div style="font-size: 11px; font-weight: 600;">WebSocket</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 5px;" id="authStatus">⚪</div>
+                                <div style="font-size: 11px; font-weight: 600;">Auth Service</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 5px;" id="paymentStatus">⚪</div>
+                                <div style="font-size: 11px; font-weight: 600;">Payment</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 5px;" id="aiStatus">⚪</div>
+                                <div style="font-size: 11px; font-weight: 600;">AI Orchestrator</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 5px;" id="marketplaceStatus">⚪</div>
+                                <div style="font-size: 11px; font-weight: 600;">Marketplace</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="stats-container">
                         <div class="stat-card">
                             <div class="stat-header">
@@ -1516,17 +1552,31 @@
     </div>
 
     <script>
-        // ========== CONFIGURACIÓN ==========
-        const WS_URL = "ws://127.0.0.1:8000";
-        const API_URL = "http://localhost:3000";
-        const AUTH_URL = "http://localhost:4000";
-        const PAYMENT_URL = "http://localhost:5000";
-        const GRAPHQL_URL = "http://localhost:4000/graphql";
+        // ========== CONFIGURACIÓN DE MICROSERVICIOS ==========
+        const MICROSERVICES = {
+            WEBSOCKET: "ws://127.0.0.1:8000",              // WebSocket Server - Tiempo Real
+            MARKETPLACE: "http://localhost:3000",           // Marketplace API - Productos, Órdenes
+            AUTH: "http://localhost:4000",                  // Auth Service - Autenticación
+            PAYMENT: "http://localhost:5000",               // Payment Service - Pagos
+            AI_ORCHESTRATOR: "http://localhost:6000",       // AI Orchestrator - Asistente IA
+            N8N: "http://localhost:5678",                   // n8n - Workflows automáticos
+            GRAPHQL: "http://localhost:4000/graphql"        // GraphQL Endpoint
+        };
+
+        // Aliases para compatibilidad
+        const WS_URL = MICROSERVICES.WEBSOCKET;
+        const API_URL = MICROSERVICES.MARKETPLACE;
+        const AUTH_URL = MICROSERVICES.AUTH;
+        const PAYMENT_URL = MICROSERVICES.PAYMENT;
+        const AI_URL = MICROSERVICES.AI_ORCHESTRATOR;
+        const GRAPHQL_URL = MICROSERVICES.GRAPHQL;
+        
         let ws = null;
         let clientId = null;
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
         let reconnectTimeout = null;
+        let aiSocket = null;  // Socket para AI Orchestrator
 
         // ========== ESTADO GLOBAL ==========
         const state = {
@@ -1535,9 +1585,20 @@
             notifications: [],
             cart: [],
             currentTab: 'dashboard',
-            clientsOnline: 1,  // Al menos estamos nosotros
-            user: null,  // Usuario autenticado
-            token: null  // JWT token
+            clientsOnline: 1,
+            user: null,
+            token: null,
+            // Nuevos estados para microservicios
+            aiConnected: false,
+            aiConversationId: null,
+            servicesHealth: {
+                websocket: false,
+                marketplace: false,
+                auth: false,
+                payment: false,
+                aiOrchestrator: false,
+                n8n: false
+            }
         };
 
         // Cargar usuario desde localStorage si existe
@@ -1548,6 +1609,70 @@
                 state.user = JSON.parse(savedUser);
                 state.token = savedToken;
                 updateUserUI();
+            }
+        }
+
+        // ========== VERIFICACI\u00d3N DE SALUD DE MICROSERVICIOS ==========
+        async function checkServicesHealth() {
+            const services = [
+                { name: 'auth', url: `${AUTH_URL}/health`, key: 'auth' },
+                { name: 'payment', url: `${PAYMENT_URL}/health`, key: 'payment' },
+                { name: 'aiOrchestrator', url: `${AI_URL}/health`, key: 'aiOrchestrator' },
+                { name: 'marketplace', url: `${API_URL}/health`, key: 'marketplace' }
+            ];
+
+            for (const service of services) {
+                try {
+                    const response = await fetch(service.url, { 
+                        method: 'GET',
+                        signal: AbortSignal.timeout(3000) // 3 segundos timeout
+                    });
+                    state.servicesHealth[service.key] = response.ok;
+                    if (response.ok) {
+                        console.log(`\u2705 ${service.name} service: OK`);
+                    }
+                } catch (error) {
+                    state.servicesHealth[service.key] = false;
+                    console.warn(`\u26a0\ufe0f ${service.name} service: Offline`);
+                }
+            }
+
+            // WebSocket ya se verifica en connectWebSocket
+            state.servicesHealth.websocket = ws && ws.readyState === WebSocket.OPEN;
+
+            updateServicesHealthUI();
+        }
+
+        function updateServicesHealthUI() {
+            const statusElements = {
+                'wsStatus': state.servicesHealth.websocket,
+                'authStatus': state.servicesHealth.auth,
+                'paymentStatus': state.servicesHealth.payment,
+                'aiStatus': state.servicesHealth.aiOrchestrator,
+                'marketplaceStatus': state.servicesHealth.marketplace
+            };
+
+            for (const [id, isActive] of Object.entries(statusElements)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = isActive ? '\u2705' : '\u274c';
+                    element.title = isActive ? 'Activo' : 'Inactivo';
+                    console.log(`✓ Actualizado ${id}: ${isActive ? 'Activo' : 'Inactivo'}`);
+                } else {
+                    console.warn(`⚠ No se encontró elemento: ${id}`);
+                }
+            }
+
+            const activeServices = Object.values(state.servicesHealth).filter(s => s).length;
+            const totalServices = Object.keys(state.servicesHealth).length;
+            
+            console.log(`\ud83d\udd0c Microservicios: ${activeServices}/${totalServices} activos`, state.servicesHealth);
+
+            // Mostrar botón de IA si el servicio está activo y hay usuario logueado
+            const aiBtn = document.getElementById('aiAssistantBtn');
+            if (aiBtn && state.user && state.servicesHealth.aiOrchestrator) {
+                aiBtn.style.display = 'block';
+                console.log('✅ Botón de Asistente IA mostrado');
             }
         }
 
@@ -2497,6 +2622,7 @@
 
         function updateUserUI() {
             const userSection = document.getElementById("userSection");
+            const aiBtn = document.getElementById("aiAssistantBtn");
 
             if (state.user) {
                 // El backend puede devolver firstName/lastName o nombre/apellido
@@ -2510,12 +2636,25 @@
                     </div>
                 `;
 
-                // Mostrar/ocultar elementos según el rol
+                // Mostrar bot\u00f3n de IA si el servicio est\u00e1 disponible
+                if (aiBtn && state.aiConnected) {
+                    aiBtn.style.display = 'block';
+                }
+
+                // Inicializar AI Orchestrator
+                initAIOrchestrator();
+
+                // Mostrar/ocultar elementos seg\u00fan el rol
                 updateRoleBasedUI();
             } else {
                 userSection.innerHTML = `
-                    <button class="btn-login" onclick="showLoginModal()">Iniciar Sesión</button>
+                    <button class="btn-login" onclick="showLoginModal()">Iniciar Sesi\u00f3n</button>
                 `;
+                
+                // Ocultar bot\u00f3n de IA
+                if (aiBtn) {
+                    aiBtn.style.display = 'none';
+                }
             }
         }
 
@@ -3296,21 +3435,236 @@
             }
         }
 
+        // ========== AI ORCHESTRATOR INTEGRATION ==========
+        async function initAIOrchestrator() {
+            try {
+                const healthCheck = await fetch(`${AI_URL}/health`, { 
+                    signal: AbortSignal.timeout(3000) 
+                });
+                if (!healthCheck.ok) {
+                    console.warn('⚠️ AI Orchestrator no disponible');
+                    return;
+                }
+
+                state.aiConnected = true;
+                state.servicesHealth.aiOrchestrator = true;
+                console.log('✅ AI Orchestrator conectado');
+                
+                if (state.user && state.token) {
+                    await startAIConversation();
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo conectar con AI Orchestrator:', error.message);
+                state.aiConnected = false;
+                state.servicesHealth.aiOrchestrator = false;
+            }
+        }
+
+        async function startAIConversation() {
+            if (!state.token || !state.aiConnected) return;
+
+            try {
+                const response = await fetch(`${AI_URL}/api/chat/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({
+                        userId: state.user.id || state.user.idUsuario,
+                        context: {
+                            products: state.products.length,
+                            cart: state.cart.length,
+                            role: state.user.role || state.user.rol
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    state.aiConversationId = data.conversationId;
+                    console.log('🤖 Conversación AI iniciada:', state.aiConversationId);
+                    addNotification('🤖 Asistente IA disponible - Pregúntame lo que necesites!', 'success');
+                }
+            } catch (error) {
+                console.error('Error iniciando conversación AI:', error);
+            }
+        }
+
+        async function askAI(message) {
+            try {
+                const response = await fetch(`${AI_URL}/api/chat/message`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversationId: state.aiConversationId || `conv_${state.user?.id || 'guest'}_${Date.now()}`,
+                        userId: state.user?.id || 'guest',
+                        messageType: 'text'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Respuesta AI:', data);
+                    
+                    // Guardar conversationId para próximas preguntas
+                    if (data.conversationId && !state.aiConversationId) {
+                        state.aiConversationId = data.conversationId;
+                    }
+                    
+                    return data.response || data.assistantResponse || 'Respuesta recibida';
+                } else {
+                    const errorData = await response.json();
+                    console.error('❌ Error del servidor:', errorData);
+                    return `Error: ${errorData.error || 'No pude procesar tu solicitud'}`;
+                }
+            } catch (error) {
+                console.error('❌ Error consultando AI:', error);
+                return `No pude conectar con el asistente. Error: ${error.message}`;
+            }
+        }
+
+        async function getAIProductRecommendations() {
+            if (!state.aiConnected) {
+                addNotification('[INFO] Conecta el servicio AI Orchestrator para obtener recomendaciones', 'warning');
+                return;
+            }
+
+            addNotification('🤖 Consultando al asistente IA...', 'info');
+            const message = `Basándote en mi historial de compras y productos disponibles, ¿qué productos me recomiendas?`;
+            const response = await askAI(message);
+            
+            if (response) {
+                addNotification(`🤖 Recomendación: ${response}`, 'success');
+            }
+        }
+
+        // Funci\u00f3n para abrir el asistente IA en un modal
+        function openAIAssistant() {
+            // Crear modal del asistente IA
+            let modal = document.getElementById('aiAssistantModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'aiAssistantModal';
+                modal.style.cssText = 'display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;';
+                modal.innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea;">
+                            <h2 style="margin: 0; color: #667eea;"><i class="fas fa-robot"></i> Asistente IA</h2>
+                            <button onclick="closeAIAssistant()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">\u00d7</button>
+                        </div>
+                        
+                        <div id="aiChatMessages" style="flex: 1; overflow-y: auto; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 10px; min-height: 300px;">
+                            <div style="text-align: center; padding: 20px; color: #666;">
+                                <i class="fas fa-robot" style="font-size: 48px; color: #667eea; margin-bottom: 15px;"></i>
+                                <p>\u00a1Hola! Soy tu asistente virtual. Puedo ayudarte con:</p>
+                                <ul style="list-style: none; padding: 0; margin-top: 15px;">
+                                    <li style="margin: 8px 0;">\ud83d\udecd\ufe0f Buscar productos</li>
+                                    <li style="margin: 8px 0;">\ud83d\udcca Consultar tus \u00f3rdenes</li>
+                                    <li style="margin: 8px 0;">\ud83d\udc65 Recomendaciones personalizadas</li>
+                                    <li style="margin: 8px 0;">\ud83d\udcb3 Ayuda con pagos</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="aiMessageInput" placeholder="Pregunta al asistente..." style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                            <button onclick="sendAIMessage()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-paper-plane"></i> Enviar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            modal.style.display = 'flex';
+            document.getElementById('aiMessageInput').focus();
+        }
+
+        function closeAIAssistant() {
+            const modal = document.getElementById('aiAssistantModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function sendAIMessage() {
+            const input = document.getElementById('aiMessageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            const chatDiv = document.getElementById('aiChatMessages');
+            
+            // Agregar mensaje del usuario
+            const userMsg = document.createElement('div');
+            userMsg.style.cssText = 'margin: 10px 0; padding: 12px; background: #667eea; color: white; border-radius: 10px 10px 0 10px; margin-left: 20%; text-align: right;';
+            userMsg.textContent = message;
+            chatDiv.appendChild(userMsg);
+            
+            input.value = '';
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+
+            // Mostrar indicador de escritura
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'aiTyping';
+            typingDiv.style.cssText = 'margin: 10px 0; padding: 12px; background: #f0f0f0; border-radius: 10px 10px 10px 0; margin-right: 20%; color: #666;';
+            typingDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Pensando...';
+            chatDiv.appendChild(typingDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+
+            // Enviar mensaje al AI
+            const response = await askAI(message);
+            
+            // Remover indicador de escritura
+            chatDiv.removeChild(typingDiv);
+
+            // Agregar respuesta del AI
+            const aiMsg = document.createElement('div');
+            aiMsg.style.cssText = 'margin: 10px 0; padding: 12px; background: #f0f0f0; border-radius: 10px 10px 10px 0; margin-right: 20%;';
+            aiMsg.textContent = response || 'Lo siento, no pude procesar tu solicitud en este momento.';
+            chatDiv.appendChild(aiMsg);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
         // ========== INICIALIZACIÓN ==========
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
+            console.log('🚀 Inicializando Marketplace con arquitectura de microservicios...');
+            
             loadUser();  // Cargar usuario guardado
+            
+            // Verificar salud de todos los microservicios
+            await checkServicesHealth();
+            
+            // Conectar servicios principales
             connectWebSocket();
-            loadProducts(); // Cargar productos iniciales
+            await loadProducts();
+            
+            // Inicializar AI Orchestrator si está disponible
+            if (state.user && state.token) {
+                await initAIOrchestrator();
+            }
+            
+            // Verificar servicios cada 30 segundos
+            setInterval(checkServicesHealth, 30000);
+            
             // Actualizar stats cada 5 segundos
             setInterval(() => {
                 updateStats({ total_clients: state.clientsOnline });
             }, 5000);
+            
             // Enviar ping cada 30 segundos para mantener viva la conexión
             setInterval(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ action: "ping" }));
                 }
             }, 30000);
+            
+            console.log('✅ Marketplace inicializado');
+            console.log('📊 Servicios disponibles:', state.servicesHealth);
         });
 
         // Cerrar modal al hacer click afuera

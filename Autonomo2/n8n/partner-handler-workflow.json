@@ -4,7 +4,9 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "partner/webhook"
+        "path": "partner/webhook",
+        "responseMode": "onReceived",
+        "options": {}
       },
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",

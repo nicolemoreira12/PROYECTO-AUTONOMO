@@ -27,13 +27,19 @@ const io = new Server(httpServer, {
 
 // ==================== MIDDLEWARES ====================
 
-// CORS
-app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-}));
+// Headers CORS manuales (máxima compatibilidad)
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.header('Access-Control-Max-Age', '86400');
+    
+    // Responder inmediatamente a OPTIONS
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // Parsear JSON
 app.use(express.json({ limit: '10mb' }));
