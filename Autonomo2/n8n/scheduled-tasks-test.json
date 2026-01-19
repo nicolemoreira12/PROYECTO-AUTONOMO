@@ -1,0 +1,133 @@
+{
+    "name": "Scheduled Tasks TEST",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "scheduled-tasks/test",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "name": "Webhook Test",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                240,
+                300
+            ],
+            "webhookId": "scheduled-tasks-test"
+        },
+        {
+            "parameters": {
+                "functionCode": "// Generar reporte de ventas simulado\nconst fecha = new Date().toISOString().split('T')[0];\nreturn [{\n  json: {\n    fecha: fecha,\n    ventas_totales: 15420,\n    ordenes_completadas: 47,\n    ordenes_pendientes: 8,\n    ingresos: '$15,420.00',\n    clientes_nuevos: 12,\n    productos_mas_vendidos: ['Producto A', 'Producto B', 'Producto C']\n  }\n}];"
+            },
+            "name": "Generar Reporte",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                480,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// Simular pagos pendientes\nreturn [{\n  json: {\n    pagos: [\n      {email: 'user1@example.com', orderId: 'ORD001', amount: 150},\n      {email: 'user2@example.com', orderId: 'ORD002', amount: 200},\n      {email: 'user3@example.com', orderId: 'ORD003', amount: 75}\n    ]\n  }\n}];"
+            },
+            "name": "Obtener Pagos Pendientes",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                720,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// Procesar cada pago pendiente\nconst pendientes = $json.pagos || [];\nreturn pendientes.map(pago => ({\n  json: {\n    email: pago.email,\n    orderId: pago.orderId,\n    amount: pago.amount\n  }\n}));"
+            },
+            "name": "Procesar Pendientes",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                960,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// Simular envío de recordatorio\nreturn [{\n  json: {\n    email: $json.email,\n    orderId: $json.orderId,\n    amount: $json.amount,\n    mensaje: `Recordatorio enviado a ${$json.email} por $${$json.amount}`,\n    timestamp: new Date().toISOString()\n  }\n}];"
+            },
+            "name": "Enviar Recordatorio",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{$json}}"
+            },
+            "name": "Responder Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1440,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook Test": {
+            "main": [
+                [
+                    {
+                        "node": "Generar Reporte",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Obtener Pagos Pendientes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Obtener Pagos Pendientes": {
+            "main": [
+                [
+                    {
+                        "node": "Procesar Pendientes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Procesar Pendientes": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar Recordatorio",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Enviar Recordatorio": {
+            "main": [
+                [
+                    {
+                        "node": "Responder Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
