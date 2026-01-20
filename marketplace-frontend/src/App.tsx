@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Navbar, ProtectedRoute } from '@presentation/components';
-import { HomePage, LoginPage, RegisterPage, CarritoPage, TestPage } from '@presentation/pages';
+import { Navbar, ProtectedRoute, AIAssistant } from '@presentation/components';
+import { HomePage, LoginPage, RegisterPage, CarritoPage, TestPage, EmprendedorPage } from '@presentation/pages';
 import { useAuthStore } from '@presentation/store';
 
 function App() {
@@ -30,6 +30,7 @@ function App() {
                 height: '100vh',
                 fontSize: '1.5rem'
             }}>
+                <i className="fas fa-spinner fa-spin" style={{ marginRight: '1rem' }}></i>
                 Cargando...
             </div>
         );
@@ -73,10 +74,22 @@ function App() {
                             }
                         />
 
+                        <Route
+                            path="/emprendedor"
+                            element={
+                                <ProtectedRoute>
+                                    <EmprendedorPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
                         {/* Ruta por defecto */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </main>
+                
+                {/* Asistente IA flotante */}
+                <AIAssistant />
             </div>
         </BrowserRouter>
     );

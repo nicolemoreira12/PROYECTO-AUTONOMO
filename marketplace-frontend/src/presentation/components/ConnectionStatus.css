@@ -1,0 +1,57 @@
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f0f0f0;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.status-dot.online {
+    background: #22c55e;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+    background: #ef4444;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+.status-text {
+    color: #333;
+}
+
+.clients-count {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #667eea;
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid #ddd;
+}
+
+.clients-count i {
+    font-size: 0.875rem;
+}

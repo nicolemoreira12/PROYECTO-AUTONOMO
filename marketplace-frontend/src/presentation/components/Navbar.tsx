@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks';
 import { useCarrito } from '../hooks';
+import { ConnectionStatus } from './ConnectionStatus';
 
 export const Navbar: React.FC = () => {
     const { user, isAuthenticated, logout } = useAuth();
@@ -14,24 +15,32 @@ export const Navbar: React.FC = () => {
                     <h1>Marketplace</h1>
                 </Link>
 
+                <div className="navbar-center">
+                    <ConnectionStatus />
+                </div>
+
                 <div className="navbar-menu">
                     <Link to="/" className="nav-link">Productos</Link>
 
                     {isAuthenticated ? (
                         <>
                             <Link to="/carrito" className="nav-link">
-                                Carrito {totalItems > 0 && <span className="badge">{totalItems}</span>}
+                                <i className="fas fa-shopping-cart"></i> Carrito {totalItems > 0 && <span className="badge">{totalItems}</span>}
                             </Link>
-                            <Link to="/ordenes" className="nav-link">Mis Órdenes</Link>
+                            <Link to="/ordenes" className="nav-link">
+                                <i className="fas fa-box"></i> Mis Órdenes
+                            </Link>
 
                             {user?.rol === 'emprendedor' && (
-                                <Link to="/emprendedor" className="nav-link">Mi Negocio</Link>
+                                <Link to="/emprendedor" className="nav-link">
+                                    <i className="fas fa-store"></i> Mi Negocio
+                                </Link>
                             )}
 
                             <div className="nav-user">
-                                <span>Hola, {user?.nombre}</span>
+                                <span><i className="fas fa-user"></i> Hola, {user?.nombre}</span>
                                 <button onClick={logout} className="btn-logout">
-                                    Cerrar Sesión
+                                    <i className="fas fa-sign-out-alt"></i> Cerrar Sesión
                                 </button>
                             </div>
                         </>
