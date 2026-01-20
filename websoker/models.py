@@ -45,16 +45,37 @@ class ConnectionManager:
         self.clients: Set = set()
         self.subscriptions: Dict[str, Set] = {}
         self.client_channels: Dict = {}
+        self.client_ips: Dict = {}  # websocket -> IP mapping
+        self.unique_ips: Set[str] = set()  # IPs únicas conectadas
     
     def add_client(self, ws) -> None:
         """Agrega un cliente conectado"""
         self.clients.add(ws)
         self.client_channels[ws] = set()
+        
+        # Rastrear IP única
+        try:
+            ip = ws.remote_address[0] if ws.remote_address else 'unknown'
+            self.client_ips[ws] = ip
+            self.unique_ips.add(ip)
+        except Exception:
+            self.client_ips[ws] = 'unknown'
+            self.unique_ips.add('unknown')
     
     def remove_client(self, ws) -> None:
         """Remueve un cliente y sus suscripciones"""
         if ws in self.clients:
             self.clients.remove(ws)
+        
+        # Limpiar IP tracking
+        client_ip = self.client_ips.pop(ws, None)
+        if client_ip:
+            # Solo remover IP si no hay otras conexiones de la misma IP
+            ip_still_connected = any(
+                ip == client_ip for ip in self.client_ips.values()
+            )
+            if not ip_still_connected:
+                self.unique_ips.discard(client_ip)
         
         # Limpiar suscripciones
         channels = self.client_channels.pop(ws, set())
@@ -84,6 +105,23 @@ class ConnectionManager:
     def get_clients(self) -> list:
         """Obtiene lista de clientes conectados"""
         return list(self.clients)
+    
+    def get_all_clients(self) -> list:
+        """Obtiene todos los clientes conectados"""
+        return list(self.clients)
+    
+    def get_clients_count(self) -> int:
+        """Obtiene el número total de conexiones (pestañas abiertas)"""
+        total_connections = len(self.clients)
+        return max(1, total_connections)  # Mínimo 1 para mostrar al menos 1 pestaña
+    
+    def get_connection_info(self) -> dict:
+        """Obtiene información detallada de conexiones para debug"""
+        return {
+            'total_connections': len(self.clients),
+            'unique_ips': len(self.unique_ips),
+            'ips': list(self.unique_ips)
+        }
     
     def get_channel_subscribers(self, channel: str) -> list:
         """Obtiene suscriptores de un canal"""

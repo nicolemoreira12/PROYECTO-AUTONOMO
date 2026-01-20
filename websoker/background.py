@@ -48,8 +48,20 @@ class BackgroundTasks:
         while True:
             try:
                 await asyncio.sleep(interval)
-                stats = self.connections.get_stats()
-                await self._broadcast_all(stats.to_dict())
+                client_count = self.connections.get_clients_count()
+                connection_info = self.connections.get_connection_info()
+                
+                message = {
+                    'type': 'clients_count',
+                    'data': {
+                        'count': client_count,
+                        'clientsOnline': client_count,
+                        'timestamp': str(asyncio.get_event_loop().time())
+                    }
+                }
+                
+                await self._broadcast_all(message)
+                print(f"📊 Pestañas abiertas: {client_count} (IPs únicas: {connection_info['unique_ips']})")
             except Exception as e:
                 print(f"Error en stats_broadcast_loop: {e}")
                 await asyncio.sleep(interval)
