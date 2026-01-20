@@ -35,9 +35,9 @@ export const useAuth = () => {
         try {
             setLoading(true);
             setError(null);
-            const { user, token } = await registerUseCase.execute(data);
-            setAuth(user, token);
-            navigate('/');
+            await registerUseCase.execute(data);
+            // No iniciar sesión automáticamente, redirigir al login
+            navigate('/login');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al registrarse');
             throw err;

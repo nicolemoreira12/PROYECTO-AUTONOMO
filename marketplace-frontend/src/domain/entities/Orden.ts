@@ -4,9 +4,30 @@ export interface Orden {
     usuarioId: number;
     total: number;
     estado: 'pendiente' | 'procesando' | 'completada' | 'cancelada';
-    detalles: DetalleOrden[];
+    detalles?: DetalleOrden[];
+    items?: ItemOrden[];
+    fechaCreacion?: Date;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface ItemOrden {
+    id: number;
+    ordenId: number;
+    productoId: number;
+    cantidad: number;
+    precio: number;
+    producto?: {
+        id: number;
+        nombre: string;
+        precio: number;
+        imagen?: string;
+        descripcion?: string;
+        stock: number;
+        emprendedorId: number;
+        categoriaId: number;
+        fechaCreacion: Date;
+    };
 }
 
 export interface DetalleOrden {

@@ -53,11 +53,16 @@ export const HomePage: React.FC = () => {
 
     const handleAddToCart = async (productoId: number) => {
         try {
-            await addToCarrito(productoId, 1);
+            const producto = productos.find(p => p.id === productoId);
+            if (!producto) {
+                alert('⚠️ Producto no encontrado');
+                return;
+            }
+            await addToCarrito(productoId, 1, producto);
             alert('✅ Producto agregado al carrito');
         } catch (err) {
             console.error('Error al agregar al carrito:', err);
-            alert('⚠️ Por favor, inicia sesión para agregar productos');
+            alert('⚠️ Error al agregar al carrito. ' + (err instanceof Error ? err.message : ''));
         }
     };
 

@@ -9,10 +9,12 @@ export const RegisterPage: React.FC = () => {
     const [rol, setRol] = useState<'usuario' | 'emprendedor'>('usuario');
     const { register, loading, error } = useAuth();
     const [formError, setFormError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError(null);
+        setSuccessMessage(null);
 
         if (password !== confirmPassword) {
             setFormError('Las contraseñas no coinciden');
@@ -41,6 +43,7 @@ export const RegisterPage: React.FC = () => {
         try {
             await register({ nombre, email, password, rol });
             console.log('✅ Registro exitoso');
+            setSuccessMessage('¡Registro exitoso! Serás redirigido al inicio de sesión...');
         } catch (err) {
             console.error('❌ Error en el registro:', err);
             // Error manejado por el hook
@@ -51,6 +54,10 @@ export const RegisterPage: React.FC = () => {
         <div className="auth-page">
             <div className="auth-container">
                 <h2>Registrarse</h2>
+
+                {successMessage && (
+                    <div className="alert alert-success">{successMessage}</div>
+                )}
 
                 {(error || formError) && (
                     <div className="alert alert-error">{error || formError}</div>

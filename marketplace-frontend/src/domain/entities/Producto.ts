@@ -7,8 +7,11 @@ export interface Producto {
     stock: number;
     imagen?: string;
     categoriaId: number;
+    categoria?: Categoria;
     emprendedorId: number;
-    activo: boolean;
+    emprendedor?: Emprendedor;
+    activo?: boolean;
+    fechaCreacion?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -16,5 +19,10 @@ export interface Producto {
 export interface Categoria {
     id: number;
     nombre: string;
-    descripcion: string;
+    descripcion?: string;
+}
+
+export interface Emprendedor {
+    id: number;
+    nombre: string;
 }

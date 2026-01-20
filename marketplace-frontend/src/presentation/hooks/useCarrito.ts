@@ -1,70 +1,78 @@
-import { useState, useEffect } from 'react';
-import {
-    GetCarritoUseCase,
-    AddToCarritoUseCase,
-    RemoveFromCarritoUseCase
-} from '@application/use-cases';
-import { CarritoRepositoryImpl } from '@infrastructure/repositories';
+import { useState } from 'react';
 import { useCarritoStore } from '../store';
-import { useAuthStore } from '../store';
-
-const carritoRepository = new CarritoRepositoryImpl();
-const getCarritoUseCase = new GetCarritoUseCase(carritoRepository);
-const addToCarritoUseCase = new AddToCarritoUseCase(carritoRepository);
-const removeFromCarritoUseCase = new RemoveFromCarritoUseCase(carritoRepository);
+import { Producto } from '@domain/entities/Producto';
 
 export const useCarrito = () => {
-    const { carrito, setCarrito, loading, setLoading, getTotalItems, getTotalPrice } = useCarritoStore();
-    const { user } = useAuthStore();
+    const { 
+        carrito, 
+        loading, 
+        setLoading,
+        getTotalItems, 
+        getTotalPrice,
+        addProducto,
+        removeItem,
+        updateCantidad,
+        clearCarrito
+    } = useCarritoStore();
+    
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (user) {
-            loadCarrito();
-        }
-    }, [user]);
-
-    const loadCarrito = async () => {
-        if (!user) return;
-
-        try {
-            setLoading(true);
-            const data = await getCarritoUseCase.execute(user.id);
-            setCarrito(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al cargar el carrito');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const addToCarrito = async (productoId: number, cantidad: number = 1) => {
-        if (!user) {
-            setError('Debes iniciar sesión para agregar productos al carrito');
-            return;
-        }
-
+    const addToCarrito = async (productoId: number, cantidad: number = 1, producto?: Producto) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await addToCarritoUseCase.execute(user.id, productoId, cantidad);
-            setCarrito(data);
+            
+            if (!producto) {
+                throw new Error('Producto no encontrado');
+            }
+
+            if (producto.stock < cantidad) {
+                throw new Error('Stock insuficiente');
+            }
+
+            addProducto(producto, cantidad);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al agregar al carrito');
+            const errorMessage = err instanceof Error ? err.message : 'Error al agregar al carrito';
+            setError(errorMessage);
             throw err;
         } finally {
             setLoading(false);
         }
     };
 
-    const removeFromCarrito = async (itemId: number) => {
+    const removeFromCarrito = async (productoId: number) => {
         try {
             setLoading(true);
             setError(null);
-            await removeFromCarritoUseCase.execute(itemId);
-            await loadCarrito();
+            removeItem(productoId);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al eliminar del carrito');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateItemCantidad = async (productoId: number, cantidad: number) => {
+        try {
+            setLoading(true);
+            setError(null);
+            updateCantidad(productoId, cantidad);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al actualizar cantidad');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const clearCart = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            clearCarrito();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al vaciar carrito');
             throw err;
         } finally {
             setLoading(false);
@@ -77,8 +85,9 @@ export const useCarrito = () => {
         error,
         totalItems: getTotalItems(),
         totalPrice: getTotalPrice(),
-        loadCarrito,
         addToCarrito,
         removeFromCarrito,
+        updateItemCantidad,
+        clearCart,
     };
 };

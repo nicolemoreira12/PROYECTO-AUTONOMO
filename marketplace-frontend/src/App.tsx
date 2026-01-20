@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar, ProtectedRoute, AIAssistant } from '@presentation/components';
-import { HomePage, LoginPage, RegisterPage, CarritoPage, TestPage, EmprendedorPage } from '@presentation/pages';
+import { HomePage, LoginPage, RegisterPage, CarritoPage, ProductoDetallePage, PerfilPage, OrdenesPage, TestPage, EmprendedorPage } from '@presentation/pages';
 import { useAuthStore } from '@presentation/store';
 
 function App() {
@@ -63,6 +63,7 @@ function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/test" element={<TestPage />} />
+                        <Route path="/productos/:id" element={<ProductoDetallePage />} />
 
                         {/* Rutas protegidas */}
                         <Route
@@ -70,6 +71,24 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <CarritoPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/perfil"
+                            element={
+                                <ProtectedRoute>
+                                    <PerfilPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/ordenes"
+                            element={
+                                <ProtectedRoute>
+                                    <OrdenesPage />
                                 </ProtectedRoute>
                             }
                         />

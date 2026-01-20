@@ -1,6 +1,7 @@
 import { IProductoRepository, ProductoFilters, CreateProductoData } from '@domain/repositories/IProductoRepository';
 import { Producto } from '@domain/entities/Producto';
 import { httpClient, API_ENDPOINTS } from '../api';
+import { productosEjemplo, getProductoEjemploPorId, buscarProductosEjemplo } from '../data/productos-ejemplo';
 
 // Helper para normalizar los datos del producto
 const normalizeProducto = (data: any): Producto => {
@@ -17,8 +18,21 @@ const normalizeProductos = (data: any[]): Producto[] => {
 
 export class ProductoRepositoryImpl implements IProductoRepository {
     async getAll(filters?: ProductoFilters): Promise<Producto[]> {
-        const response = await httpClient.get<Producto[]>(API_ENDPOINTS.PRODUCTOS);
-        return normalizeProductos(response);
+        try {
+            const response = await httpClient.get<Producto[]>(API_ENDPOINTS.PRODUCTOS);
+            const productos = normalizeProductos(response);
+            
+            // Si el backend no tiene productos, usar los de ejemplo
+            if (!productos || productos.length === 0) {
+                console.log('📦 Usando productos de ejemplo (backend vacío)');
+                return productosEjemplo;
+            }
+            
+            return productos;
+        } catch (error) {
+            console.warn('⚠️ Error al obtener productos del backend, usando productos de ejemplo:', error);
+            return productosEjemplo;
+        }
     }
 
     async getById(id: number): Promise<Producto | null> {
@@ -26,7 +40,8 @@ export class ProductoRepositoryImpl implements IProductoRepository {
             const response = await httpClient.get<Producto>(API_ENDPOINTS.PRODUCTO_BY_ID(id));
             return normalizeProducto(response);
         } catch (error) {
-            return null;
+            console.warn(`⚠️ Error al obtener producto ${id} del backend, usando producto de ejemplo`);
+            return getProductoEjemploPorId(id);
         }
     }
 
@@ -45,7 +60,20 @@ export class ProductoRepositoryImpl implements IProductoRepository {
     }
 
     async searchByName(query: string): Promise<Producto[]> {
-        const response = await httpClient.get<Producto[]>(`${API_ENDPOINTS.SEARCH_PRODUCTOS}?q=${query}`);
-        return normalizeProductos(response);
+        try {
+            const response = await httpClient.get<Producto[]>(`${API_ENDPOINTS.SEARCH_PRODUCTOS}?q=${query}`);
+            const productos = normalizeProductos(response);
+            
+            // Si no hay resultados en el backend, buscar en productos de ejemplo
+            if (!productos || productos.length === 0) {
+                console.log('🔍 Buscando en productos de ejemplo');
+                return buscarProductosEjemplo(query);
+            }
+            
+            return productos;
+        } catch (error) {
+            console.warn('⚠️ Error en búsqueda del backend, usando productos de ejemplo');
+            return buscarProductosEjemplo(query);
+        }
     }
 }

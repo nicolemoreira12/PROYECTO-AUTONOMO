@@ -2,5 +2,8 @@ export * from './HomePage';
 export * from './LoginPage';
 export * from './RegisterPage';
 export * from './CarritoPage';
+export * from './ProductoDetallePage';
+export * from './PerfilPage';
+export * from './OrdenesPage';
 export * from './TestPage';
 export * from './EmprendedorPage';

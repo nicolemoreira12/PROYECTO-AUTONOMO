@@ -4,6 +4,8 @@ export interface Usuario {
     nombre: string;
     email: string;
     rol: 'usuario' | 'emprendedor' | 'admin';
+    telefono?: string;
+    direccion?: string;
     createdAt: Date;
     updatedAt: Date;
 }
