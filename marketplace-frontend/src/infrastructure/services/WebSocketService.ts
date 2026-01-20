@@ -42,6 +42,9 @@ export class WebSocketService {
                 console.log('✅ WebSocket conectado');
                 this.reconnectAttempts = 0;
                 this.notifyConnectionChange(true);
+                
+                // Solicitar conteo de clientes al conectar
+                this.send('get_clients_count', {});
             };
 
             this.ws.onmessage = (event) => {
@@ -96,8 +99,7 @@ export class WebSocketService {
         
         console.log(`Reintentando conexión en ${delay}ms (intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
         
-        this.reconnectTimeout = setTimeout(() => {
-            this.connect();
+        this.reconnectTimeout = setTimeout(() => {            console.log('🔄 Reintentando conexión WebSocket...');            this.connect();
         }, delay);
     }
 

@@ -32,7 +32,8 @@ class WebSocketServer:
         try:
             # Agregar cliente
             self.connections.add_client(ws)
-            print(f"✅ Cliente conectado: {ws.remote_address}")
+            ip = ws.remote_address[0] if ws.remote_address else 'unknown'
+            print(f"✅ Cliente conectado: {ip} (puerto: {ws.remote_address[1] if ws.remote_address else 'unknown'})")
             
             # Notificar cambio de estado
             try:
@@ -59,14 +60,16 @@ class WebSocketServer:
                         pass
         
         except websockets.exceptions.ConnectionClosed:
-            print(f"👋 Cliente desconectado normalmente: {ws.remote_address}")
+            ip = ws.remote_address[0] if ws.remote_address else 'unknown'
+            print(f"👋 Cliente desconectado normalmente: {ip}")
         except Exception as e:
             print(f"❌ Error en client_handler: {e}")
         
         finally:
             # Limpiar cliente
             self.connections.remove_client(ws)
-            print(f"🧹 Cliente limpiado: {ws.remote_address}")
+            ip = ws.remote_address[0] if ws.remote_address else 'unknown'
+            print(f"🧹 Cliente limpiado: {ip}")
             
             # Notificar cambio de estado
             try:
@@ -118,13 +121,22 @@ class WebSocketServer:
     async def _broadcast_stats(self) -> None:
         """Envía estadísticas a todos"""
         try:
-            stats = self.connections.get_stats()
+            client_count = self.connections.get_clients_count()
             clients = self.connections.get_clients()
+            
+            message = {
+                'type': 'clients_count',
+                'data': {
+                    'count': client_count,
+                    'clientsOnline': client_count,
+                    'timestamp': str(asyncio.get_event_loop().time())
+                }
+            }
             
             if clients:
                 for client in clients:
                     try:
-                        await self._send_safe(client, stats.to_dict())
+                        await self._send_safe(client, message)
                     except Exception:
                         pass
         except Exception as e:

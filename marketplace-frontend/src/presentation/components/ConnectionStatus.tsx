@@ -10,6 +10,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ onClientsCha
     const [isConnected, setIsConnected] = useState(false);
     const [clientsOnline, setClientsOnline] = useState(1);
     const [hasError, setHasError] = useState(false);
+    const [showCount, setShowCount] = useState(true);
 
     useEffect(() => {
         // Intentar conectar WebSocket
@@ -30,8 +31,10 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ onClientsCha
         // Escuchar actualizaciones de clientes
         const handleClientsCount = (data: any) => {
             const count = data.count || data.clientsOnline || 1;
-            setClientsOnline(count);
-            onClientsChange?.(count);
+            // Asegurar que el mínimo sea 1 y máximo razonable
+            const realCount = Math.max(1, Math.min(count, 999));
+            setClientsOnline(realCount);
+            onClientsChange?.(realCount);
         };
 
         webSocketService.onConnectionChange(handleConnectionChange);
@@ -55,7 +58,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ onClientsCha
             <span className="status-text">
                 {isConnected ? 'En línea' : 'Modo local'}
             </span>
-            {isConnected && (
+            {showCount && (
                 <span className="clients-count">
                     <i className="fas fa-users"></i> {clientsOnline}
                 </span>

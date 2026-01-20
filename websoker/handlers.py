@@ -19,6 +19,7 @@ class MessageHandler:
             'get_products': self.handle_get_products,
             'add_product': self.handle_add_product,
             'notify': self.handle_notify,
+            'get_clients_count': self.handle_get_clients_count,
         }
     
     async def process_message(self, ws, raw_message: str) -> Optional[Dict[str, Any]]:
@@ -133,6 +134,31 @@ class MessageHandler:
             if client != exclude_client:
                 await self._send_safe(client, message)
     
+    
+    async def handle_get_clients_count(self, ws, data: dict) -> dict:
+        """Devuelve el número de clientes conectados"""
+        client_count = self.connections.get_clients_count()
+        
+        # Enviar a todos los clientes el conteo actualizado
+        message = {
+            'type': 'clients_count',
+            'data': {
+                'count': client_count,
+                'clientsOnline': client_count,
+                'timestamp': str(asyncio.get_event_loop().time())
+            }
+        }
+        
+        # Broadcast a todos
+        await self._broadcast_to_all(message)
+        
+        return message
+    
+    async def _broadcast_to_all(self, message: dict) -> None:
+        """Envía mensaje a todos los clientes conectados"""
+        for client in self.connections.get_all_clients():
+            await self._send_safe(client, message)
+
     @staticmethod
     async def _send_safe(ws, message: dict) -> bool:
         """Envía mensaje de forma segura"""
