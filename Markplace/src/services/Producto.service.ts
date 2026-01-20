@@ -64,4 +64,14 @@ export class ProductoService {
     
     return result;
   }
+
+  async search(query: string) {
+    return await productoRepo
+      .createQueryBuilder("producto")
+      .leftJoinAndSelect("producto.emprendedor", "emprendedor")
+      .leftJoinAndSelect("producto.categoria", "categoria")
+      .where("LOWER(producto.nombreProducto) LIKE LOWER(:query)", { query: `%${query}%` })
+      .orWhere("LOWER(producto.descripcion) LIKE LOWER(:query)", { query: `%${query}%` })
+      .getMany();
+  }
 }

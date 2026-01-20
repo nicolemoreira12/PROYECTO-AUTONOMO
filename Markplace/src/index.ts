@@ -50,20 +50,23 @@ app.get("/", (_req, res) => {
 app.use('/api/auth', createProxyMiddleware({
   target: 'http://localhost:4000',
   changeOrigin: true,
-  pathRewrite: (path, req) => {
-    // Reemplaza '/api/auth' con '/auth' al principio de la ruta
-    return path.replace(/^\/api\/auth/, '/auth');
+  timeout: 60000,
+  proxyTimeout: 60000,
+  pathRewrite: {
+    '^/api/auth': '/auth'
   },
-  on: {
-    proxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
-      console.log(`[PROXY] Redirigiendo ${req.method} ${req.originalUrl} -> ${proxyReq.protocol}//${proxyReq.host}${proxyReq.path}`);
-    },
-    error: (err: Error, req: Request, res: Response | Socket) => {
-      console.error('[PROXY] Error:', err);
-      if ('status' in res) {
-        res.status(500).send('Proxy Error');
-      }
-    },
+  logLevel: 'debug',
+  onProxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
+    console.log(`[PROXY] Redirigiendo ${req.method} ${req.originalUrl} -> http://localhost:4000${proxyReq.path}`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[PROXY] Respuesta recibida para ${req.method} ${req.originalUrl}: ${proxyRes.statusCode}`);
+  },
+  onError: (err: Error, req: Request, res: Response | Socket) => {
+    console.error('[PROXY] Error:', err.message);
+    if ('status' in res) {
+      res.status(500).json({ error: 'Error en el proxy de autenticación' });
+    }
   },
 }));
 

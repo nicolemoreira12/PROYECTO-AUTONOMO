@@ -6,12 +6,14 @@ import {
   obtenerProducto,
   actualizarProducto,
   eliminarProducto,
+  buscarProductos,
 } from "../controllers/Producto.controller";
 
 const router = Router();
 
 // Rutas públicas (sin autenticación)
 router.get("/", listarProductos);      // Listar todos
+router.get("/search", buscarProductos); // Buscar productos (debe ir antes de /:id)
 router.get("/:id", obtenerProducto);   // Obtener uno
 
 // Rutas protegidas (requieren autenticación)

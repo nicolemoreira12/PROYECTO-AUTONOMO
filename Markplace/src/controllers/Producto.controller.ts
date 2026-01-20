@@ -49,6 +49,20 @@ export const eliminarProducto = async (req: Request, res: Response) => {
     await productoService.delete(parseInt(req.params.id));
     res.json({ message: "Producto eliminado correctamente" });
   } catch (error) {
-    res.status(404).json({ message: error instanceof Error ? error.message : "Error al eliminar producto" });
+    res.status(400).json({ message: error instanceof Error ? error.message : "Error al eliminar producto" });
+  }
+};
+
+// Buscar productos
+export const buscarProductos = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string;
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ message: "La búsqueda debe tener al menos 2 caracteres" });
+    }
+    const productos = await productoService.search(query);
+    res.json(productos);
+  } catch (error) {
+    res.status(500).json({ message: "Error al buscar productos", error });
   }
 };

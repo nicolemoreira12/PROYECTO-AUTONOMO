@@ -29,7 +29,7 @@ const registerValidation = [
     .notEmpty().withMessage('La contraseña es requerida')
     .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres'),
   body('phone')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
     .isMobilePhone('any').withMessage('El teléfono no es válido'),
   body('role')
