@@ -16,13 +16,18 @@ export const useAuth = () => {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, rol: 'usuario' | 'emprendedor') => {
         try {
             setLoading(true);
             setError(null);
-            const { user, token } = await loginUseCase.execute(email, password);
+            const { user, token } = await loginUseCase.execute(email, password, rol);
+            console.log('3. ROL ANTES DE LA REDIRECCIÓN:', user.rol);
             setAuth(user, token);
-            navigate('/');
+            if (user.rol === 'emprendedor') {
+                navigate('/emprendedor');
+            } else {
+                navigate('/');
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
             throw err;
@@ -35,9 +40,14 @@ export const useAuth = () => {
         try {
             setLoading(true);
             setError(null);
-            await registerUseCase.execute(data);
-            // No iniciar sesión automáticamente, redirigir al login
-            navigate('/login');
+            // El registro ahora devuelve el usuario y el token directamente
+            const { user, token } = await registerUseCase.execute(data);
+            setAuth(user, token);
+            if (user.rol === 'emprendedor') {
+                navigate('/emprendedor');
+            } else {
+                navigate('/');
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al registrarse');
             throw err;

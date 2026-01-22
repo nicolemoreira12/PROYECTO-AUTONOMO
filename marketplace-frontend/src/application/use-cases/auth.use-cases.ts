@@ -4,12 +4,14 @@ import { Usuario } from '@domain/entities/Usuario';
 export class LoginUseCase {
     constructor(private authRepository: IAuthRepository) { }
 
-    async execute(email: string, password: string): Promise<{ user: Usuario; token: string }> {
+    async execute(email: string, password: string, rol: 'usuario' | 'emprendedor'): Promise<{ user: Usuario; token: string }> {
         if (!email || !password) {
             throw new Error('Email y contraseña son requeridos');
         }
 
-        return await this.authRepository.login(email, password);
+        const result = await this.authRepository.login(email, password, rol);
+        console.log('2. ROL AL PASAR POR EL CASO DE USO:', result.user.rol);
+        return result;
     }
 }
 

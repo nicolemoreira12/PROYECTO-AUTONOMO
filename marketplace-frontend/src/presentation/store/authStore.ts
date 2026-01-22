@@ -16,6 +16,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     isAuthenticated: false,
 
     setAuth: (user, token) => {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         set({ user, token, isAuthenticated: true });
     },
 
@@ -33,6 +35,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (token && userStr) {
             try {
                 const user = JSON.parse(userStr);
+
+                // Lógica de corrección al cargar
+                if (user && user.rol === 'user') {
+                    user.rol = 'usuario';
+                }
+
                 set({ user, token, isAuthenticated: true });
             } catch (error) {
                 localStorage.removeItem('token');

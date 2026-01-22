@@ -4,12 +4,13 @@ import { useAuth } from '../hooks';
 export const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [rol, setRol] = useState<'usuario' | 'emprendedor'>('usuario'); // Por defecto 'usuario' (Comprador)
     const { login, loading, error } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await login(email, password);
+            await login(email, password, rol);
         } catch (err) {
             // Error manejado por el hook
         }
@@ -45,6 +46,32 @@ export const LoginPage: React.FC = () => {
                             placeholder="Tu contraseña"
                             required
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Ingresar como:</label>
+                        <div className="role-selector">
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="rol"
+                                    value="usuario"
+                                    checked={rol === 'usuario'}
+                                    onChange={() => setRol('usuario')}
+                                />
+                                Comprador
+                            </label>
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="rol"
+                                    value="emprendedor"
+                                    checked={rol === 'emprendedor'}
+                                    onChange={() => setRol('emprendedor')}
+                                />
+                                Vendedor
+                            </label>
+                        </div>
                     </div>
 
                     <button
