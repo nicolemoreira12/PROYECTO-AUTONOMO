@@ -16,10 +16,25 @@ export const MICROSERVICES = {
     AI_ORCHESTRATOR: import.meta.env.VITE_AI_ORCHESTRATOR_URL || 'http://localhost:6000',
     
     // n8n - Workflows automáticos
-    N8N: import.meta.env.VITE_N8N_URL || 'http://localhost:5678',
+    N8N: import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678',
     
     // GraphQL Endpoint
     GRAPHQL: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:3000/graphql',
+} as const;
+
+// Feature flags
+export const FEATURES = {
+    REAL_PAYMENTS: import.meta.env.VITE_ENABLE_REAL_PAYMENTS === 'true',
+    AI_CHAT: import.meta.env.VITE_ENABLE_AI_CHAT === 'true',
+    GRAPHQL: import.meta.env.VITE_ENABLE_GRAPHQL === 'true',
+    WEBSOCKET: import.meta.env.VITE_ENABLE_WEBSOCKET === 'true',
+    DEBUG: import.meta.env.VITE_DEBUG === 'true',
+} as const;
+
+// Configuración de timeouts
+export const TIMEOUTS = {
+    REQUEST: parseInt(import.meta.env.VITE_REQUEST_TIMEOUT || '30000'),
+    WEBSOCKET_RECONNECT: 5000,
 } as const;
 
 export type MicroserviceKey = keyof typeof MICROSERVICES;

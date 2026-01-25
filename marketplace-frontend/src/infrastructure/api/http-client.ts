@@ -1,17 +1,32 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { MICROSERVICES, TIMEOUTS } from './microservices.config';
+
+// Clase de error personalizada que preserva status y response
+export class HttpError extends Error {
+    constructor(
+        message: string,
+        public status?: number,
+        public response?: any
+    ) {
+        super(message);
+        this.name = 'HttpError';
+    }
+}
 
 // Configuración base del cliente HTTP
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const AUTH_BASE_URL = import.meta.env.VITE_AUTH_URL || 'http://localhost:4000';
+const API_BASE_URL = MICROSERVICES.MARKETPLACE;
+const AUTH_BASE_URL = MICROSERVICES.AUTH;
 
 class HttpClient {
     private client: AxiosInstance;
     private authClient: AxiosInstance;
+    private isRefreshing = false;
+    private refreshSubscribers: ((token: string) => void)[] = [];
 
     constructor() {
         this.client = axios.create({
             baseURL: API_BASE_URL,
-            timeout: 60000,
+            timeout: TIMEOUTS.REQUEST,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -19,7 +34,7 @@ class HttpClient {
 
         this.authClient = axios.create({
             baseURL: AUTH_BASE_URL,
-            timeout: 60000,
+            timeout: TIMEOUTS.REQUEST,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -43,11 +58,28 @@ class HttpClient {
 
         this.client.interceptors.response.use(
             (response) => response,
-            (error: AxiosError) => {
-                if (error.response?.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '/login';
+            async (error: AxiosError) => {
+                const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+                if (error.response?.status === 401 && !originalRequest._retry) {
+                    originalRequest._retry = true;
+
+                    const refreshToken = localStorage.getItem('refreshToken');
+                    
+                    if (refreshToken) {
+                        try {
+                            const newToken = await this.handleTokenRefresh(refreshToken);
+                            if (newToken && originalRequest.headers) {
+                                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                                return this.client(originalRequest);
+                            }
+                        } catch (refreshError) {
+                            this.handleLogout();
+                            return Promise.reject(refreshError);
+                        }
+                    } else {
+                        this.handleLogout();
+                    }
                 }
                 return Promise.reject(this.handleError(error));
             }
@@ -67,25 +99,70 @@ class HttpClient {
 
         this.authClient.interceptors.response.use(
             (response) => response,
-            (error: AxiosError) => {
+            async (error: AxiosError) => {
                 if (error.response?.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '/login';
+                    this.handleLogout();
                 }
                 return Promise.reject(this.handleError(error));
             }
         );
     }
 
-    private handleError(error: AxiosError): Error {
+    private async handleTokenRefresh(refreshToken: string): Promise<string | null> {
+        if (this.isRefreshing) {
+            return new Promise((resolve) => {
+                this.refreshSubscribers.push((token: string) => {
+                    resolve(token);
+                });
+            });
+        }
+
+        this.isRefreshing = true;
+
+        try {
+            const response = await axios.post(`${AUTH_BASE_URL}/auth/refresh`, {
+                refreshToken,
+            });
+
+            const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+            localStorage.setItem('token', accessToken);
+            if (newRefreshToken) {
+                localStorage.setItem('refreshToken', newRefreshToken);
+            }
+
+            this.isRefreshing = false;
+            this.onRefreshed(accessToken);
+            this.refreshSubscribers = [];
+
+            return accessToken;
+        } catch (error) {
+            this.isRefreshing = false;
+            this.refreshSubscribers = [];
+            return null;
+        }
+    }
+
+    private onRefreshed(token: string) {
+        this.refreshSubscribers.forEach((callback) => callback(token));
+    }
+
+    private handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
+
+    private handleError(error: AxiosError): HttpError {
         if (error.response) {
             const message = (error.response.data as any)?.message || 'Error del servidor';
-            return new Error(message);
+            return new HttpError(message, error.response.status, error.response.data);
         } else if (error.request) {
-            return new Error('Error de conexión. Verifica tu red.');
+            // Silenciado en modo offline - el error se maneja en los repositorios
+            return new HttpError('Backend no disponible', 0);
         } else {
-            return new Error('Error inesperado');
+            return new HttpError('Error inesperado');
         }
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { aiService, type AIMessage } from '@infrastructure/services';
+import { aiService, type AIMessage, type AIResponse } from '@infrastructure/services';
 import './AIAssistant.css';
 
 export const AIAssistant: React.FC = () => {
@@ -7,6 +7,7 @@ export const AIAssistant: React.FC = () => {
     const [messages, setMessages] = useState<AIMessage[]>([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -26,71 +27,61 @@ export const AIAssistant: React.FC = () => {
     const initializeConversation = async () => {
         try {
             const conversationId = await aiService.startConversation();
-            if (conversationId) {
-                setMessages([
-                    {
-                        role: 'assistant',
-                        content: '¡Hola! 👋 Soy tu asistente de compras con IA. ¿En qué puedo ayudarte hoy?',
-                        timestamp: new Date(),
-                    },
-                ]);
-            } else {
-                setMessages([
-                    {
-                        role: 'assistant',
-                        content: '👋 ¡Hola! Bienvenido al Marketplace.\n\n💡 El servicio de IA está en modo de demostración.\n\nExplora nuestros productos y encuentra las mejores ofertas. Si necesitas ayuda, el equipo de soporte está disponible.',
-                        timestamp: new Date(),
-                    },
-                ]);
-            }
-        } catch (error) {
-            console.warn('IA Service no disponible:', error);
+            
+            // Siempre mostrar mensaje de bienvenida (funciona en modo online y offline)
             setMessages([
                 {
                     role: 'assistant',
-                    content: '👋 ¡Hola! Bienvenido al Marketplace.\n\n💡 Modo de demostración:\nEl asistente IA requiere el servidor AI Orchestrator (puerto 6000).\n\nMientras tanto, puedes:\n✅ Explorar productos\n✅ Agregar al carrito\n✅ Realizar compras\n\n¿Necesitas ayuda? Contacta a soporte.',
+                    content: '¡Hola! 👋 Soy tu asistente de compras con IA.\n\n¿En qué puedo ayudarte hoy?\n\n💡 Puedes preguntarme sobre:\n• Recomendaciones de productos\n• Información sobre categorías\n• Ayuda con compras\n• Métodos de pago y envío',
+                    timestamp: new Date(),
+                },
+            ]);
+        } catch (error) {
+            // Fallback si falla completamente
+            setMessages([
+                {
+                    role: 'assistant',
+                    content: '👋 ¡Hola! Bienvenido al Marketplace.\n\nSoy tu asistente virtual. Puedo ayudarte con información sobre productos, categorías, compras y más.\n\n¿Qué te gustaría saber?',
                     timestamp: new Date(),
                 },
             ]);
         }
     };
 
-    const handleSendMessage = async () => {
-        if (!inputMessage.trim() || isLoading) return;
+    const handleSendMessage = async (messageText?: string) => {
+        const textToSend = messageText || inputMessage;
+        if (!textToSend.trim() || isLoading) return;
 
         const userMessage: AIMessage = {
             role: 'user',
-            content: inputMessage,
+            content: textToSend,
             timestamp: new Date(),
         };
 
         setMessages(prev => [...prev, userMessage]);
         setInputMessage('');
         setIsLoading(true);
+        setSuggestions([]);
 
-        try {
-            const response = await aiService.sendMessage(inputMessage);
-            
-            const assistantMessage: AIMessage = {
-                role: 'assistant',
-                content: response.message || response.error || '💡 El servicio de IA no está disponible.\n\nPara usar el asistente inteligente:\n1. Inicia el servidor AI Orchestrator (puerto 6000)\n2. Vuelve a intentar tu consulta\n\n¿Necesitas ayuda? Contacta a soporte.',
-                timestamp: new Date(),
-            };
+        // Enviar el mensaje y esperar la respuesta
+        const response = await aiService.sendMessage(textToSend);
 
-            setMessages(prev => [...prev, assistantMessage]);
-        } catch (error) {
-            console.error('Error al enviar mensaje:', error);
-            setMessages(prev => [
-                ...prev,
-                {
-                    role: 'assistant',
-                    content: '💡 El servicio de IA no está disponible en este momento.\n\n¿Qué puedes hacer?\n✅ Explorar el catálogo de productos\n✅ Usar la búsqueda\n✅ Contactar soporte si necesitas ayuda\n\nPara activar el asistente IA, inicia el servidor en el puerto 6000.',
-                    timestamp: new Date(),
-                },
-            ]);
-        } finally {
-            setIsLoading(false);
+        // Construir el mensaje de respuesta del asistente
+        const assistantMessage: AIMessage = {
+            role: 'assistant',
+            content: response?.message || response?.error || 'Lo siento, no pude procesar tu solicitud. Por favor, intenta de nuevo.',
+            timestamp: new Date(),
+        };
+
+        // Añadir la respuesta a la lista de mensajes y desactivar el estado de carga
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Actualizar sugerencias si existen
+        if (response?.suggestions && response.suggestions.length > 0) {
+            setSuggestions(response.suggestions);
         }
+        
+        setIsLoading(false);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -154,6 +145,22 @@ export const AIAssistant: React.FC = () => {
                         )}
                         <div ref={messagesEndRef} />
                     </div>
+
+                    {/* Sugerencias rápidas */}
+                    {suggestions.length > 0 && (
+                        <div className="ai-suggestions">
+                            {suggestions.map((suggestion, index) => (
+                                <button
+                                    key={index}
+                                    className="ai-suggestion-btn"
+                                    onClick={() => handleSendMessage(suggestion)}
+                                    disabled={isLoading}
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="ai-assistant-input">
                         <input
