@@ -49,8 +49,12 @@ export interface ItemCarrito {
     id: number;
     productoId: number;
     producto?: {
+        id: number;
         nombre: string;
+        nombreProducto?: string;
+        descripcion?: string;
         precio: number;
+        stock?: number;
         imagen?: string;
     };
     cantidad: number;
