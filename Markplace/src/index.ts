@@ -22,6 +22,7 @@ import detallecarritoRoutes from "./routes/Dellatecarrito.routes";
 import detalleordenRoutes from "./routes/DetalleOrden.routes";
 import pagoRoutes from "./routes/Pago.routes";
 import reportesRoutes from "./routes/Reportes.routes";
+import aiRoutes from "./routes/AIRoutes";
 import { typeDefs, resolvers } from "./graphql/schema";
 import { pubsub } from "./graphql/pubsub";
 
@@ -82,6 +83,7 @@ app.use("/api/carrito", carritoRoutes);
 app.use("/api/detallecarrito", detallecarritoRoutes);
 app.use("/api/detalleorden", detalleordenRoutes);
 app.use("/api/pagos", pagoRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Middleware de errores 
 app.use(errorHandler);

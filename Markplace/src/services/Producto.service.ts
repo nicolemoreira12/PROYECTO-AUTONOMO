@@ -11,57 +11,66 @@ export class ProductoService {
   }
 
   async getById(id: number) {
-    const producto = await productoRepo.findOne({ 
-      where: { idProducto: id }, 
-      relations: ["emprendedor", "categoria"] 
+    const producto = await productoRepo.findOne({
+      where: { idProducto: id },
+      relations: ["emprendedor", "categoria"]
     });
-    
+
     if (!producto) {
       throw new Error("Producto no encontrado");
     }
-    
+
     return producto;
   }
 
   async create(data: Partial<Producto>) {
-    const nuevo = productoRepo.create(data);
-    const saved = await productoRepo.save(nuevo);
-    // Publicar evento para GraphQL subscriptions
     try {
-      pubsub.publish(PRODUCT_ADDED, { productAdded: saved });
-    } catch (e) {
-      console.warn("Could not publish PRODUCT_ADDED", e);
+      console.log('📦 Creando producto con datos:', JSON.stringify(data, null, 2));
+      const nuevo = productoRepo.create(data);
+      console.log('📝 Producto creado (antes de guardar):', nuevo);
+      const saved = await productoRepo.save(nuevo);
+      console.log('✅ Producto guardado:', saved);
+      // Publicar evento para GraphQL subscriptions
+      try {
+        pubsub.publish(PRODUCT_ADDED, { productAdded: saved });
+      } catch (e) {
+        console.warn("Could not publish PRODUCT_ADDED", e);
+      }
+      // Enviar al WebSocket externo si está conectado
+      try {
+        wsClient.addProduct(saved);
+      } catch (e) {
+        // no bloquear si falla WS
+      }
+      return saved;
+    } catch (error) {
+      console.error('❌ Error detallado al crear producto:', error);
+      console.error('Stack:', error instanceof Error ? error.stack : 'No stack');
+      throw error;
     }
-    // Enviar al WebSocket externo si está conectado
-    try {
-      wsClient.addProduct(saved);
-    } catch (e) {
-      // no bloquear si falla WS
-    }
-    return saved;
   }
 
   async update(id: number, data: Partial<Producto>) {
     const producto = await productoRepo.findOneBy({ idProducto: id });
-    
+
     if (!producto) {
       throw new Error("Producto no encontrado");
     }
-    
+
     productoRepo.merge(producto, data);
     const saved = await productoRepo.save(producto);
-    try { pubsub.publish(PRODUCT_ADDED, { productAdded: saved }); } catch {}
-    try { wsClient.updateProduct(String(id), saved); } catch {}
+    try { pubsub.publish(PRODUCT_ADDED, { productAdded: saved }); } catch { }
+    try { wsClient.updateProduct(String(id), saved); } catch { }
     return saved;
   }
 
   async delete(id: number) {
     const result = await productoRepo.delete(id);
-    
+
     if (result.affected === 0) {
       throw new Error("Producto no encontrado");
     }
-    
+
     return result;
   }
 

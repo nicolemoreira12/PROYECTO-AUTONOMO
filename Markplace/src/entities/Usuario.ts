@@ -3,10 +3,10 @@ import { Orden } from "./Orden";
 import { CarritoCompra } from "./CarritoCompra";
 import { TarjetaVirtual } from "./TarjetaVirtual";
 
-@Entity()
+@Entity('usuarios')
 export class Usuario {
   @PrimaryGeneratedColumn()
-  idUsuario!: number;
+  id!: number;
 
   @Column({ length: 100 })
   nombre!: string;
@@ -17,8 +17,8 @@ export class Usuario {
   @Column({ length: 100, unique: true })
   email!: string;
 
-  @Column({ length: 100 })
-  contrasena!: string;
+  @Column({ length: 100, nullable: true })
+  contrasena?: string;
 
   @Column({ length: 200, nullable: true })
   direccion?: string;
@@ -26,11 +26,17 @@ export class Usuario {
   @Column({ length: 20, nullable: true })
   telefono?: string;
 
-  @Column({ length: 50, nullable: true })
-  rol?: string;
+  @Column({ length: 50, default: 'usuario' })
+  rol!: string;
 
-  @Column({ type: "date" })
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   fechaRegistro!: Date;
+
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP" })
+  updated_at!: Date;
+
+  @Column({ default: true })
+  activo!: boolean;
 
   @OneToMany(() => Orden, (orden) => orden.usuario)
   ordenes!: Orden[];

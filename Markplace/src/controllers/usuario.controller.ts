@@ -6,10 +6,22 @@ const usuarioService = new UsuarioService();
 // Crear usuario
 export const createUsuario = async (req: Request, res: Response) => {
   try {
+    console.log('📝 Datos recibidos para crear usuario:', JSON.stringify(req.body, null, 2));
     const usuario = await usuarioService.create(req.body);
+    console.log('✅ Usuario creado exitosamente:', { id: usuario.id, email: usuario.email });
     res.status(201).json(usuario);
   } catch (error) {
-    res.status(500).json({ message: "Error al crear usuario", error });
+    console.error('❌ Error al crear usuario:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Detectar error de duplicado
+    const isDuplicate = error instanceof Error && 
+      (error.message.includes('ya existe') || error.message.includes('duplicate'));
+    
+    res.status(isDuplicate ? 409 : 500).json({ 
+      message: error instanceof Error ? error.message : "Error al crear usuario", 
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 
@@ -30,6 +42,24 @@ export const getUsuarioById = async (req: Request, res: Response) => {
     res.json(usuario);
   } catch (error) {
     res.status(404).json({ message: error instanceof Error ? error.message : "Usuario no encontrado" });
+  }
+};
+
+// Obtener un usuario por email
+export const getUsuarioByEmail = async (req: Request, res: Response) => {
+  try {
+    const email = req.params.email;
+    console.log('📧 Buscando usuario por email:', email);
+    
+    const usuario = await usuarioService.getByEmail(email);
+    console.log('📧 Resultado de búsqueda:', usuario ? `✅ Encontrado (id: ${usuario.id})` : '❌ No encontrado');
+    
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    res.json(usuario);
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : "Error al buscar usuario" });
   }
 };
 

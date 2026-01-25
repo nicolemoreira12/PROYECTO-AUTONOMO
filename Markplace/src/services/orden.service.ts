@@ -32,7 +32,7 @@ export class OrdenService {
     }
 
     // Buscar el usuario
-    const usuario = await usuarioRepo.findOneBy({ idUsuario: usuarioId });
+    const usuario = await usuarioRepo.findOneBy({ id: usuarioId });
     if (!usuario) {
       throw new Error("Usuario no encontrado");
     }
