@@ -6,10 +6,25 @@ const productoService = new ProductoService();
 // Crear producto
 export const crearProducto = async (req: Request, res: Response) => {
   try {
-    const producto = await productoService.create(req.body);
+    const imagen = req.body.imagenUrl || req.body.imagenURL;
+    // Mapear campos del frontend al backend
+    const productoData = {
+      nombreProducto: req.body.nombre || req.body.nombreProducto,
+      descripcion: req.body.descripcion,
+      precio: parseFloat(req.body.precio),
+      stock: parseInt(req.body.stock),
+      imagenURL: (imagen && imagen.trim()) || '/images/default-product.jpg',
+      emprendedor: req.body.emprendedorId ? { idEmprendedor: req.body.emprendedorId } : undefined,
+      categoria: req.body.categoriaId ? { idCategoria: req.body.categoriaId } : undefined
+    };
+
+    console.log('📦 Creando producto:', productoData);
+
+    const producto = await productoService.create(productoData);
     res.status(201).json(producto);
   } catch (error) {
-    res.status(400).json({ message: "Error al crear producto", error });
+    console.error('❌ Error al crear producto:', error);
+    res.status(400).json({ message: "Error al crear producto", error: error instanceof Error ? error.message : error });
   }
 };
 
@@ -36,7 +51,19 @@ export const obtenerProducto = async (req: Request, res: Response) => {
 // Actualizar
 export const actualizarProducto = async (req: Request, res: Response) => {
   try {
-    const producto = await productoService.update(parseInt(req.params.id), req.body);
+    const dataToUpdate = { ...req.body };
+    const imagen = dataToUpdate.imagenUrl || dataToUpdate.imagenURL;
+
+    // Si el campo de imagen está presente en la solicitud, actualízalo.
+    // Esto incluye el caso en que se envía una cadena vacía para usar la imagen por defecto.
+    if (imagen !== undefined) {
+      dataToUpdate.imagenURL = (imagen && imagen.trim()) || '/images/default-product.jpg';
+    }
+    
+    // Limpiar las propiedades originales para evitar conflictos
+    delete dataToUpdate.imagenUrl;
+
+    const producto = await productoService.update(parseInt(req.params.id), dataToUpdate);
     res.json(producto);
   } catch (error) {
     res.status(400).json({ message: error instanceof Error ? error.message : "Error al actualizar producto" });

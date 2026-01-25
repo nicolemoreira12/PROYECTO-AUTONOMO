@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks';
+import { useAuthStore } from '../store';
+import { httpClient } from '@infrastructure/api';
 import './PerfilPage.css';
 
 export const PerfilPage: React.FC = () => {
     const { user } = useAuth();
+    const { setAuth } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         nombre: user?.nombre || '',
+        apellido: user?.apellido || '',
         email: user?.email || '',
         telefono: user?.telefono || '',
         direccion: user?.direccion || '',
@@ -39,11 +43,45 @@ export const PerfilPage: React.FC = () => {
             setSaving(true);
             setMessage(null);
             
-            // Aquí iría la lógica para actualizar el usuario
-            // await updateUser(formData);
-            
-            // Simulación
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('💾 Actualizando perfil:', formData);
+
+            // Buscar el usuario en Markplace por email
+            const usuarioMarkplace = await httpClient.get(`/usuarios/email/${user?.email}`).catch(() => null);
+
+            if (usuarioMarkplace) {
+                // Actualizar usuario existente
+                await httpClient.put(`/usuarios/${usuarioMarkplace.idUsuario}`, {
+                    nombre: formData.nombre,
+                    apellido: formData.apellido,
+                    email: formData.email,
+                    telefono: formData.telefono,
+                    direccion: formData.direccion
+                });
+            } else {
+                // Crear usuario si no existe
+                await httpClient.post('/usuarios', {
+                    nombre: formData.nombre,
+                    apellido: formData.apellido,
+                    email: formData.email,
+                    telefono: formData.telefono,
+                    direccion: formData.direccion,
+                    contrasena: 'synced',
+                    rol: user?.rol,
+                    fechaRegistro: new Date()
+                });
+            }
+
+            // Actualizar el usuario en el store local
+            const updatedUser = {
+                ...user!,
+                nombre: formData.nombre,
+                apellido: formData.apellido,
+                telefono: formData.telefono,
+                direccion: formData.direccion
+            };
+
+            const token = localStorage.getItem('token') || '';
+            setAuth(updatedUser, token);
             
             setMessage({ type: 'success', text: '✅ Perfil actualizado correctamente' });
             setIsEditing(false);
@@ -58,6 +96,7 @@ export const PerfilPage: React.FC = () => {
     const handleCancelEdit = () => {
         setFormData({
             nombre: user?.nombre || '',
+            apellido: user?.apellido || '',
             email: user?.email || '',
             telefono: user?.telefono || '',
             direccion: user?.direccion || '',
@@ -127,7 +166,7 @@ export const PerfilPage: React.FC = () => {
                             <form onSubmit={handleSubmit} className="perfil-form">
                                 <div className="form-group">
                                     <label htmlFor="nombre">
-                                        <i className="fas fa-user"></i> Nombre Completo
+                                        <i className="fas fa-user"></i> Nombre
                                     </label>
                                     <input
                                         id="nombre"
@@ -135,8 +174,22 @@ export const PerfilPage: React.FC = () => {
                                         type="text"
                                         value={formData.nombre}
                                         onChange={handleChange}
-                                        placeholder="Tu nombre completo"
+                                        placeholder="Tu nombre"
                                         required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="apellido">
+                                        <i className="fas fa-user"></i> Apellido
+                                    </label>
+                                    <input
+                                        id="apellido"
+                                        name="apellido"
+                                        type="text"
+                                        value={formData.apellido}
+                                        onChange={handleChange}
+                                        placeholder="Tu apellido"
                                     />
                                 </div>
 

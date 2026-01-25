@@ -35,8 +35,8 @@ export const EmprendedorPage: React.FC = () => {
     const [nuevoProducto, setNuevoProducto] = useState({
         nombre: '',
         descripcion: '',
-        precio: 0,
-        stock: 0,
+        precio: '' as any,
+        stock: '' as any,
         categoriaId: 1,
         imagenUrl: ''
     });
@@ -50,18 +50,25 @@ export const EmprendedorPage: React.FC = () => {
         try {
             // Cargar productos del emprendedor
             const productosResponse = await httpClient.get<any>('/productos');
-            
+
             // Filtrar solo productos del emprendedor actual si existe la relación
-            const misProductos = productosResponse.filter((p: any) => 
+            const misProductos = productosResponse.filter((p: any) =>
                 p.emprendedor?.usuarioId === user?.id || p.usuario?.id === user?.id
             );
-            
-            setProductos(misProductos);
+
+            // Mapear imagen para asegurar compatibilidad
+            const productosMapeados = misProductos.map((p: any) => ({
+                ...p,
+                imagen: p.imagen || p.imagenUrl || '',
+                imagenUrl: p.imagen || p.imagenUrl || ''
+            }));
+
+            setProductos(productosMapeados);
 
             // Calcular estadísticas
             const stats = {
-                totalProductos: misProductos.length,
-                productosActivos: misProductos.filter((p: any) => p.stock > 0).length,
+                totalProductos: productosMapeados.length,
+                productosActivos: productosMapeados.filter((p: any) => p.stock > 0).length,
                 totalVentas: 0, // Se puede calcular desde órdenes
                 ingresosTotal: 0 // Se puede calcular desde órdenes
             };
@@ -79,26 +86,57 @@ export const EmprendedorPage: React.FC = () => {
         setLoading(true);
 
         try {
-            // Crear emprendedor si no existe
-            let emprendedorId = user?.id;
+            // Buscar o crear emprendedor para este usuario
+            let emprendedorId: number | undefined;
 
-            // Crear el producto
+            try {
+                // Intentar obtener el emprendedor del usuario
+                const emprendedoresResponse = await httpClient.get<any[]>('/emprendedores');
+                const miEmprendedor = emprendedoresResponse.find((e: any) =>
+                    e.usuarioId === user?.id || e.usuario?.idUsuario === user?.id
+                );
+
+                if (miEmprendedor) {
+                    emprendedorId = miEmprendedor.idEmprendedor;
+                } else {
+                    // Crear nuevo emprendedor
+                    const nuevoEmprendedor = await httpClient.post('/emprendedores', {
+                        nombreTienda: `Tienda de ${user?.nombre}`,
+                        descripcionTienda: 'Mi tienda personal',
+                        rating: 5.0,
+                        usuarioId: user?.id
+                    });
+                    emprendedorId = nuevoEmprendedor.idEmprendedor;
+                    console.log('✅ Emprendedor creado:', emprendedorId);
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo verificar/crear emprendedor:', error);
+            }
+
+            // Crear el producto con los datos correctos
             const productoData = {
-                ...nuevoProducto,
-                usuarioId: user?.id,
-                emprendedorId: emprendedorId
+                nombre: nuevoProducto.nombre,
+                nombreProducto: nuevoProducto.nombre, // Backend usa nombreProducto
+                descripcion: nuevoProducto.descripcion,
+                precio: parseFloat(nuevoProducto.precio.toString()),
+                stock: parseInt(nuevoProducto.stock.toString()),
+                categoriaId: nuevoProducto.categoriaId,
+                emprendedorId: emprendedorId,
+                imagen: nuevoProducto.imagenUrl || 'https://via.placeholder.com/50'
             };
+
+            console.log('📦 Enviando producto:', productoData);
 
             await httpClient.post('/productos', productoData);
 
             alert('✅ Producto agregado exitosamente!');
-            
+
             // Limpiar formulario
             setNuevoProducto({
                 nombre: '',
                 descripcion: '',
-                precio: 0,
-                stock: 0,
+                precio: '' as any,
+                stock: '' as any,
                 categoriaId: 1,
                 imagenUrl: ''
             });
@@ -136,25 +174,25 @@ export const EmprendedorPage: React.FC = () => {
             </div>
 
             <div className="emprendedor-tabs">
-                <button 
+                <button
                     className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
                     onClick={() => setActiveTab('dashboard')}
                 >
                     📊 Dashboard
                 </button>
-                <button 
+                <button
                     className={`tab ${activeTab === 'productos' ? 'active' : ''}`}
                     onClick={() => setActiveTab('productos')}
                 >
                     📦 Mis Productos
                 </button>
-                <button 
+                <button
                     className={`tab ${activeTab === 'agregar' ? 'active' : ''}`}
                     onClick={() => setActiveTab('agregar')}
                 >
                     ➕ Agregar Producto
                 </button>
-                <button 
+                <button
                     className={`tab ${activeTab === 'ventas' ? 'active' : ''}`}
                     onClick={() => setActiveTab('ventas')}
                 >
@@ -215,7 +253,7 @@ export const EmprendedorPage: React.FC = () => {
                 {activeTab === 'productos' && (
                     <div className="productos-section">
                         <h2>📦 Mis Productos ({productos.length})</h2>
-                        
+
                         {loading ? (
                             <div className="loading-center">
                                 <div className="spinner"></div>
@@ -226,8 +264,8 @@ export const EmprendedorPage: React.FC = () => {
                                 <div className="empty-icon">📦</div>
                                 <h3>No tienes productos aún</h3>
                                 <p>Comienza agregando tu primer producto</p>
-                                <button 
-                                    className="btn-primary" 
+                                <button
+                                    className="btn-primary"
                                     onClick={() => setActiveTab('agregar')}
                                 >
                                     ➕ Agregar Producto
@@ -251,15 +289,15 @@ export const EmprendedorPage: React.FC = () => {
                                         {productos.map((producto) => (
                                             <tr key={producto.id}>
                                                 <td>
-                                                    <img 
-                                                        src={producto.imagenUrl || 'https://via.placeholder.com/50'} 
+                                                    <img
+                                                        src={producto.imagen || producto.imagenUrl || 'https://via.placeholder.com/50'}
                                                         alt={producto.nombre}
                                                         className="producto-img-small"
                                                     />
                                                 </td>
                                                 <td><strong>{producto.nombre}</strong></td>
                                                 <td>{producto.categoria?.nombre || 'Sin categoría'}</td>
-                                                <td>${producto.precio.toFixed(2)}</td>
+                                                <td>${typeof producto.precio === 'number' ? producto.precio.toFixed(2) : parseFloat(producto.precio).toFixed(2)}</td>
                                                 <td>{producto.stock}</td>
                                                 <td>
                                                     <span className={`badge ${producto.stock > 0 ? 'badge-success' : 'badge-danger'}`}>
@@ -267,9 +305,9 @@ export const EmprendedorPage: React.FC = () => {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <button 
+                                                    <button
                                                         className="btn-icon btn-danger"
-                                                        onClick={() => handleEliminarProducto(producto.id)}
+                                                        onClick={() => handleEliminarProducto(producto.idProducto ?? producto.id)}
                                                         title="Eliminar"
                                                     >
                                                         🗑️
@@ -288,7 +326,7 @@ export const EmprendedorPage: React.FC = () => {
                 {activeTab === 'agregar' && (
                     <div className="agregar-section">
                         <h2>➕ Agregar Nuevo Producto</h2>
-                        
+
                         <form onSubmit={handleAgregarProducto} className="producto-form">
                             <div className="form-row">
                                 <div className="form-group">
@@ -296,7 +334,7 @@ export const EmprendedorPage: React.FC = () => {
                                     <input
                                         type="text"
                                         value={nuevoProducto.nombre}
-                                        onChange={(e) => setNuevoProducto({...nuevoProducto, nombre: e.target.value})}
+                                        onChange={(e) => setNuevoProducto({ ...nuevoProducto, nombre: e.target.value })}
                                         placeholder="Ej: Laptop HP 15"
                                         required
                                     />
@@ -306,7 +344,7 @@ export const EmprendedorPage: React.FC = () => {
                                     <label>Categoría *</label>
                                     <select
                                         value={nuevoProducto.categoriaId}
-                                        onChange={(e) => setNuevoProducto({...nuevoProducto, categoriaId: parseInt(e.target.value)})}
+                                        onChange={(e) => setNuevoProducto({ ...nuevoProducto, categoriaId: parseInt(e.target.value) })}
                                         required
                                     >
                                         <option value={1}>Electrónica</option>
@@ -322,7 +360,7 @@ export const EmprendedorPage: React.FC = () => {
                                 <label>Descripción *</label>
                                 <textarea
                                     value={nuevoProducto.descripcion}
-                                    onChange={(e) => setNuevoProducto({...nuevoProducto, descripcion: e.target.value})}
+                                    onChange={(e) => setNuevoProducto({ ...nuevoProducto, descripcion: e.target.value })}
                                     placeholder="Describe tu producto..."
                                     rows={4}
                                     required
@@ -337,7 +375,7 @@ export const EmprendedorPage: React.FC = () => {
                                         step="0.01"
                                         min="0"
                                         value={nuevoProducto.precio}
-                                        onChange={(e) => setNuevoProducto({...nuevoProducto, precio: parseFloat(e.target.value)})}
+                                        onChange={(e) => setNuevoProducto({ ...nuevoProducto, precio: parseFloat(e.target.value) })}
                                         placeholder="0.00"
                                         required
                                     />
@@ -349,7 +387,7 @@ export const EmprendedorPage: React.FC = () => {
                                         type="number"
                                         min="0"
                                         value={nuevoProducto.stock}
-                                        onChange={(e) => setNuevoProducto({...nuevoProducto, stock: parseInt(e.target.value)})}
+                                        onChange={(e) => setNuevoProducto({ ...nuevoProducto, stock: parseInt(e.target.value) })}
                                         placeholder="0"
                                         required
                                     />
@@ -361,13 +399,13 @@ export const EmprendedorPage: React.FC = () => {
                                 <input
                                     type="url"
                                     value={nuevoProducto.imagenUrl}
-                                    onChange={(e) => setNuevoProducto({...nuevoProducto, imagenUrl: e.target.value})}
+                                    onChange={(e) => setNuevoProducto({ ...nuevoProducto, imagenUrl: e.target.value })}
                                     placeholder="https://ejemplo.com/imagen.jpg"
                                 />
                                 {nuevoProducto.imagenUrl && (
-                                    <img 
-                                        src={nuevoProducto.imagenUrl} 
-                                        alt="Preview" 
+                                    <img
+                                        src={nuevoProducto.imagenUrl}
+                                        alt="Preview"
                                         className="image-preview"
                                         onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200' }}
                                     />
@@ -375,15 +413,15 @@ export const EmprendedorPage: React.FC = () => {
                             </div>
 
                             <div className="form-actions">
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     className="btn-primary btn-large"
                                     disabled={loading}
                                 >
                                     {loading ? '⏳ Guardando...' : '✅ Guardar Producto'}
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     className="btn-secondary"
                                     onClick={() => setActiveTab('productos')}
                                 >

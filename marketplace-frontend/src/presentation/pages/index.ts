@@ -7,3 +7,4 @@ export * from './PerfilPage';
 export * from './OrdenesPage';
 export * from './TestPage';
 export * from './EmprendedorPage';
+export * from './OrdenConfirmacionPage';

@@ -30,10 +30,17 @@ export const ProductoDetallePage: React.FC = () => {
             return;
         }
 
+        const productoId = parseInt(id);
+        if (isNaN(productoId)) {
+            setError('ID de producto inválido');
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
-            const data = await productoRepository.getById(parseInt(id));
+            const data = await productoRepository.getById(productoId);
             if (data) {
                 setProducto(data);
                 setSelectedImage(data.imagen || '/placeholder.png');

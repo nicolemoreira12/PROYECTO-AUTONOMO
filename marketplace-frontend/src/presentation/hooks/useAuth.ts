@@ -20,17 +20,34 @@ export const useAuth = () => {
         try {
             setLoading(true);
             setError(null);
+            
+            console.log('🔐 Iniciando sesión...', { email, rol });
+            
             const { user, token } = await loginUseCase.execute(email, password, rol);
-            console.log('3. ROL ANTES DE LA REDIRECCIÓN:', user.rol);
+            
+            console.log('✅ Login exitoso:', {
+                id: user.id,
+                nombre: user.nombre,
+                email: user.email,
+                rol: user.rol
+            });
+            
+            // Guardar en el store
             setAuth(user, token);
-            if (user.rol === 'emprendedor') {
-                navigate('/emprendedor');
-            } else {
-                navigate('/');
-            }
+            
+            // Pequeña espera para asegurar que el estado se guardó
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            // Redirigir según el rol real del usuario
+            const redirectPath = user.rol === 'emprendedor' ? '/emprendedor' : '/';
+            console.log('🔄 Redirigiendo a:', redirectPath);
+            
+            navigate(redirectPath, { replace: true });
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
-            throw err;
+            console.error('❌ Error en login:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión';
+            setError(errorMessage);
+            throw new Error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -40,17 +57,34 @@ export const useAuth = () => {
         try {
             setLoading(true);
             setError(null);
-            // El registro ahora devuelve el usuario y el token directamente
+            
+            console.log('📝 Registrando usuario...', { email: data.email, rol: data.rol });
+            
             const { user, token } = await registerUseCase.execute(data);
+            
+            console.log('✅ Registro exitoso:', {
+                id: user.id,
+                nombre: user.nombre,
+                email: user.email,
+                rol: user.rol
+            });
+            
+            // Guardar en el store
             setAuth(user, token);
-            if (user.rol === 'emprendedor') {
-                navigate('/emprendedor');
-            } else {
-                navigate('/');
-            }
+            
+            // Pequeña espera para asegurar que el estado se guardó
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            // Redirigir según el rol
+            const redirectPath = user.rol === 'emprendedor' ? '/emprendedor' : '/';
+            console.log('🔄 Redirigiendo a:', redirectPath);
+            
+            navigate(redirectPath, { replace: true });
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al registrarse');
-            throw err;
+            console.error('❌ Error en register:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Error al registrarse';
+            setError(errorMessage);
+            throw new Error(errorMessage);
         } finally {
             setLoading(false);
         }

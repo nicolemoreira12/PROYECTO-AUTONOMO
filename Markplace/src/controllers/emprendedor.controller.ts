@@ -25,10 +25,25 @@ export class EmprendedorController {
 
   async create(req: Request, res: Response) {
     try {
+      console.log('📝 Creando emprendedor con datos:', req.body);
+      
+      // Validar campos requeridos
+      if (!req.body.nombreTienda || req.body.nombreTienda.trim() === '') {
+        return res.status(400).json({ 
+          message: "Error al crear emprendedor", 
+          error: "El nombre de la tienda es requerido" 
+        });
+      }
+
       const data = await service.create(req.body);
+      console.log('✅ Emprendedor creado:', data);
       return res.status(201).json(data);
     } catch (error) {
-      return res.status(400).json({ message: "Error al crear emprendedor", error });
+      console.error('❌ Error al crear emprendedor:', error);
+      return res.status(400).json({ 
+        message: "Error al crear emprendedor", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   }
 

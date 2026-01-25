@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCarrito } from '../hooks';
+import { PaymentModal } from '../components/PaymentModal';
+import { paymentUseCases } from '@application/use-cases';
 import './CarritoPage.css';
 
 export const CarritoPage: React.FC = () => {
     const navigate = useNavigate();
     const { carrito, loading, totalPrice, removeFromCarrito, updateItemCantidad } = useCarrito();
     const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
     const handleRemoveItem = async (productoId: number) => {
         if (confirm('¿Eliminar este producto del carrito?')) {
@@ -38,9 +42,48 @@ export const CarritoPage: React.FC = () => {
     };
 
     const handleCheckout = () => {
-        // Aquí se podría integrar con un modal de pago o redirigir
-        alert('🎉 Funcionalidad de pago en desarrollo. ¡Pronto disponible!');
-        // navigate('/checkout');
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentSuccess = async (_transaccionId: string, _detalles?: any) => {
+        setIsProcessingCheckout(true);
+        
+        try {
+            // El PaymentModal ya manejó el pago, ahora procesamos el checkout completo
+            if (!carrito || carrito.items.length === 0) {
+                alert('El carrito está vacío');
+                return;
+            }
+
+            const items = carrito.items
+                .filter(item => item.producto) // Filtrar items sin producto
+                .map(item => ({
+                    productoId: item.producto!.id,
+                    cantidad: item.cantidad,
+                    precio: item.producto!.precio,
+                    nombreProducto: item.producto!.nombreProducto || item.producto!.nombre,
+                }));
+
+            // Crear la orden con el transaccionId recibido
+            const resultado = await paymentUseCases.procesarCheckout(
+                items,
+                'tarjeta', // El método se selecciona en el modal
+                {}
+            );
+
+            if (resultado.success) {
+                // Redirigir a la página de confirmación
+                navigate(`/orden/${resultado.ordenId}`);
+            } else {
+                alert(resultado.mensaje || 'Error al procesar el checkout');
+            }
+        } catch (error) {
+            console.error('Error en checkout:', error);
+            alert('Error al procesar la compra');
+        } finally {
+            setIsProcessingCheckout(false);
+            setShowPaymentModal(false);
+        }
     };
 
     const handleContinueShopping = () => {
@@ -92,16 +135,19 @@ export const CarritoPage: React.FC = () => {
 
                 <div className="carrito-content">
                     <div className="carrito-items">
-                        {carrito.items.map((item) => {
-                            const isUpdating = updatingItems.has(item.producto.id);
-                            const maxStock = item.producto?.stock || 10;
+                        {carrito.items
+                            .filter(item => item.producto) // Solo mostrar items con producto válido
+                            .map((item, index) => {
+                            const producto = item.producto!; // Non-null assertion después del filter
+                            const isUpdating = updatingItems.has(producto.id);
+                            const maxStock = producto.stock || 10;
 
                             return (
-                                <div key={item.producto.id} className="carrito-item">
+                                <div key={producto.id || `item-${index}`} className="carrito-item">
                                     <div className="item-image">
                                         <img
-                                            src={item.producto?.imagen || '/placeholder.png'}
-                                            alt={item.producto?.nombre}
+                                            src={producto.imagen || '/placeholder.png'}
+                                            alt={producto.nombre}
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = '/placeholder.png';
                                             }}
@@ -109,14 +155,14 @@ export const CarritoPage: React.FC = () => {
                                     </div>
 
                                     <div className="item-details">
-                                        <h3>{item.producto?.nombre}</h3>
+                                        <h3>{producto.nombre}</h3>
                                         <p className="item-description">
-                                            {item.producto?.descripcion?.substring(0, 100)}
-                                            {(item.producto?.descripcion?.length || 0) > 100 && '...'}
+                                            {producto.descripcion?.substring(0, 100)}
+                                            {(producto.descripcion?.length || 0) > 100 && '...'}
                                         </p>
                                         <p className="item-price">
                                             <i className="fas fa-tag"></i>
-                                            ${(item.producto?.precio || 0).toFixed(2)} c/u
+                                            ${producto.precio.toFixed(2)} c/u
                                         </p>
                                         <p className="item-stock">
                                             <i className="fas fa-box"></i>
@@ -128,7 +174,7 @@ export const CarritoPage: React.FC = () => {
                                         <label>Cantidad:</label>
                                         <div className="quantity-controls">
                                             <button
-                                                onClick={() => handleUpdateCantidad(item.producto.id, item.cantidad - 1, maxStock)}
+                                                onClick={() => handleUpdateCantidad(producto.id, item.cantidad - 1, maxStock)}
                                                 className="quantity-btn"
                                                 disabled={item.cantidad <= 1 || isUpdating}
                                             >
@@ -140,7 +186,7 @@ export const CarritoPage: React.FC = () => {
                                                 onChange={(e) => {
                                                     const val = parseInt(e.target.value);
                                                     if (!isNaN(val)) {
-                                                        handleUpdateCantidad(item.producto.id, val, maxStock);
+                                                        handleUpdateCantidad(producto.id, val, maxStock);
                                                     }
                                                 }}
                                                 min="1"
@@ -149,7 +195,7 @@ export const CarritoPage: React.FC = () => {
                                                 disabled={isUpdating}
                                             />
                                             <button
-                                                onClick={() => handleUpdateCantidad(item.producto.id, item.cantidad + 1, maxStock)}
+                                                onClick={() => handleUpdateCantidad(producto.id, item.cantidad + 1, maxStock)}
                                                 className="quantity-btn"
                                                 disabled={item.cantidad >= maxStock || isUpdating}
                                             >
@@ -165,10 +211,10 @@ export const CarritoPage: React.FC = () => {
 
                                     <div className="item-actions">
                                         <p className="item-subtotal">
-                                            ${((item.producto?.precio || 0) * item.cantidad).toFixed(2)}
+                                            ${(producto.precio * item.cantidad).toFixed(2)}
                                         </p>
                                         <button
-                                            onClick={() => handleRemoveItem(item.producto.id)}
+                                            onClick={() => handleRemoveItem(producto.id)}
                                             className="btn-remove"
                                         >
                                             <i className="fas fa-trash-alt"></i> Eliminar
@@ -208,8 +254,16 @@ export const CarritoPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <button onClick={handleCheckout} className="btn-checkout">
-                            <i className="fas fa-credit-card"></i> Proceder al Pago
+                        <button onClick={handleCheckout} className="btn-checkout" disabled={isProcessingCheckout}>
+                            {isProcessingCheckout ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin"></i> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-credit-card"></i> Proceder al Pago
+                                </>
+                            )}
                         </button>
 
                         <button onClick={handleContinueShopping} className="btn-continue">
@@ -228,6 +282,14 @@ export const CarritoPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Modal de Pago */}
+                <PaymentModal
+                    isOpen={showPaymentModal}
+                    onClose={() => setShowPaymentModal(false)}
+                    total={totalFinal}
+                    onSuccess={handlePaymentSuccess}
+                />
             </div>
         </div>
     );
