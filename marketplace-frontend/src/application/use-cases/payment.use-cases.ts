@@ -63,7 +63,7 @@ class PaymentUseCases {
             // Paso 3: Actualizar estado de la orden según resultado del pago
             if (resultadoPago.success) {
                 await this.actualizarEstadoOrden(orden.idOrden, 'completado', resultadoPago.transaccionId);
-                
+
                 // Paso 4: Limpiar el carrito
                 await this.limpiarCarrito();
 
@@ -172,20 +172,17 @@ class PaymentUseCases {
      */
     private async limpiarCarrito(): Promise<void> {
         try {
-            // Obtener el carrito actual
-            const carrito = await httpClient.get<any>('/carrito');
-            
-            if (carrito && carrito.idCarrito) {
-                // Eliminar todos los items del carrito
-                const items = await httpClient.get<any[]>(`/carrito/${carrito.idCarrito}/items`);
-                
-                for (const item of items) {
-                    await httpClient.delete(`/carrito/items/${item.idDetalleCarrito}`);
-                }
-            }
+            // Limpiar el carrito en el backend
+            await httpClient.delete('/carrito');
+            console.log('✅ Carrito limpiado en el backend');
+
+            // Limpiar el carrito local (localStorage)
+            localStorage.removeItem('carrito-storage');
+            console.log('✅ Carrito local limpiado');
         } catch (error) {
-            console.error('Error al limpiar carrito:', error);
-            // No lanzar error, el usuario puede limpiar manualmente
+            console.error('Error al limpiar carrito en backend:', error);
+            // Aún así limpiar el carrito local
+            localStorage.removeItem('carrito-storage');
         }
     }
 

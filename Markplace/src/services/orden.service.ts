@@ -23,19 +23,49 @@ export class OrdenService {
     return orden;
   }
 
-  async create(data: Partial<Orden> & { usuarioIdUsuario?: number; usuarioId?: number }) {
-    // Obtener el ID del usuario
-    const usuarioId = data.usuarioIdUsuario || data.usuarioId;
+  async create(data: Partial<Orden> & { 
+    usuarioIdUsuario?: number; 
+    usuarioId?: number | string;
+    email?: string;
+  }) {
+    // Obtener el ID del usuario (puede ser numérico o email/UUID)
+    const usuarioIdOrEmail = data.usuarioIdUsuario || data.usuarioId || data.email;
 
-    if (!usuarioId) {
-      throw new Error("Se requiere usuarioIdUsuario");
+    if (!usuarioIdOrEmail) {
+      throw new Error("Se requiere usuarioId o email");
     }
 
-    // Buscar el usuario
-    const usuario = await usuarioRepo.findOneBy({ id: usuarioId });
+    let usuario: Usuario | null = null;
+
+    // Si es un número, buscar por ID
+    if (typeof usuarioIdOrEmail === 'number') {
+      usuario = await usuarioRepo.findOneBy({ id: usuarioIdOrEmail });
+    } 
+    // Si es string, puede ser UUID o email
+    else if (typeof usuarioIdOrEmail === 'string') {
+      // Primero intentar buscar por email
+      if (usuarioIdOrEmail.includes('@')) {
+        usuario = await usuarioRepo.findOneBy({ email: usuarioIdOrEmail });
+      } else {
+        // Si no es email, intentar buscar por ID numérico parseado
+        const numericId = parseInt(usuarioIdOrEmail, 10);
+        if (!isNaN(numericId)) {
+          usuario = await usuarioRepo.findOneBy({ id: numericId });
+        }
+      }
+      
+      // Si no encontró y hay email en data, buscar por ese email
+      if (!usuario && data.email) {
+        usuario = await usuarioRepo.findOneBy({ email: data.email });
+      }
+    }
+
     if (!usuario) {
-      throw new Error("Usuario no encontrado");
+      console.error("❌ Usuario no encontrado para:", { usuarioIdOrEmail, email: data.email });
+      throw new Error(`Usuario no encontrado. ID/Email: ${usuarioIdOrEmail}`);
     }
+
+    console.log("✅ Usuario encontrado:", usuario.id, usuario.email);
 
     // Crear la orden con la relación correcta
     const nuevaOrden = ordenRepo.create({

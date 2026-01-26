@@ -60,9 +60,13 @@ class HttpClient {
             (response) => response,
             async (error: AxiosError) => {
                 const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+                const url = originalRequest?.url || '';
 
+                // Solo intentar refresh en errores 401 (no autenticado)
+                // NO hacer logout en errores 400, 403, 500, etc.
                 if (error.response?.status === 401 && !originalRequest._retry) {
                     originalRequest._retry = true;
+                    console.warn('⚠️ Error 401 en:', url);
 
                     const refreshToken = localStorage.getItem('refreshToken');
                     
@@ -74,13 +78,23 @@ class HttpClient {
                                 return this.client(originalRequest);
                             }
                         } catch (refreshError) {
-                            this.handleLogout();
-                            return Promise.reject(refreshError);
+                            // Solo hacer logout si el refresh falla
+                            console.error('❌ Error al refrescar token:', refreshError);
+                            // NO hacer logout automático, dejar que el usuario decida
+                            console.warn('⚠️ Refresh falló, pero no hacemos logout automático');
                         }
                     } else {
-                        this.handleLogout();
+                        // No hay refresh token - probablemente el usuario no está logueado
+                        console.warn('⚠️ No hay refresh token disponible');
+                        // NO hacer logout automático aquí tampoco
                     }
                 }
+                
+                // Para errores 403 (forbidden), NO hacer logout automático
+                if (error.response?.status === 403) {
+                    console.warn('Error 403 - Acceso prohibido:', url, error.response.data);
+                }
+
                 return Promise.reject(this.handleError(error));
             }
         );
@@ -100,8 +114,11 @@ class HttpClient {
         this.authClient.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
-                if (error.response?.status === 401) {
-                    this.handleLogout();
+                // Solo hacer logout si el error es en rutas de autenticación críticas
+                // NO hacer logout automático por errores generales
+                const url = error.config?.url || '';
+                if (error.response?.status === 401 && url.includes('/auth/')) {
+                    console.warn('Error 401 en authClient, pero no hacemos logout automático');
                 }
                 return Promise.reject(this.handleError(error));
             }

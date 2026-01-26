@@ -1,13 +1,41 @@
 import { MockAdapter } from "../../adapters/mock.adapter";
+import { StripeAdapter } from "../../adapters/stripe.adapter";
 import { CreatePaymentDTO, PaymentResponseDTO, PaymentStatus, PaymentStatusDTO } from "../dtos/payment.dto";
 import { PaymentProvider } from "../ports/payment-provider.interface";
 import { WebhookService } from "./webhook.service";
 
 export class PaymentService {
   private providers: Map<string, PaymentProvider> = new Map();
+  private stripeAdapter: StripeAdapter | null = null;
 
   constructor(private webhookService: WebhookService) {
+    // Registrar siempre el mock para desarrollo/testing
     this.registerProvider(new MockAdapter());
+    
+    // Registrar Stripe solo si está configurado
+    this.initializeStripe();
+  }
+
+  private initializeStripe(): void {
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        this.stripeAdapter = new StripeAdapter();
+        this.registerProvider(this.stripeAdapter);
+        console.log('[PaymentService] ✅ Stripe configurado correctamente.');
+      } catch (error) {
+        console.error('[PaymentService] ⚠️ Error al inicializar Stripe:', error);
+        console.log('[PaymentService] Stripe no estará disponible. Usando mock como fallback.');
+      }
+    } else {
+      console.log('[PaymentService] ⚠️ STRIPE_SECRET_KEY no configurada. Stripe no disponible.');
+    }
+  }
+
+  /**
+   * Obtiene el adaptador de Stripe si está disponible
+   */
+  getStripeAdapter(): StripeAdapter | null {
+    return this.stripeAdapter;
   }
 
   private registerProvider(provider: PaymentProvider) {

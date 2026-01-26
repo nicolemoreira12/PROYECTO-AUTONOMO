@@ -11,14 +11,33 @@ const usuarioRepo = AppDataSource.getRepository(Usuario);
 
 export class CarritoService {
   // Métodos para el frontend
-  async getOrCreateByUsuario(userId: number) {
-    const usuario = await usuarioRepo.findOneBy({ idUsuario: userId });
+  async getOrCreateByUsuario(userIdOrEmail: number | string) {
+    let usuario;
+
+    // Si es número, buscar por ID
+    if (typeof userIdOrEmail === 'number') {
+      usuario = await usuarioRepo.findOneBy({ id: userIdOrEmail });
+    }
+    // Si es string, puede ser email o ID numérico como string
+    else if (typeof userIdOrEmail === 'string') {
+      if (userIdOrEmail.includes('@')) {
+        // Buscar por email
+        usuario = await usuarioRepo.findOneBy({ email: userIdOrEmail });
+      } else {
+        // Intentar como ID numérico
+        const numericId = parseInt(userIdOrEmail, 10);
+        if (!isNaN(numericId)) {
+          usuario = await usuarioRepo.findOneBy({ id: numericId });
+        }
+      }
+    }
+
     if (!usuario) {
       throw new Error("Usuario no encontrado");
     }
 
     let carrito = await carritoRepo.findOne({
-      where: { usuario: { idUsuario: userId } },
+      where: { usuario: { id: usuario.id } },
       relations: ["detalles", "detalles.producto", "detalles.producto.categoria", "detalles.producto.emprendedor"]
     });
 
@@ -35,7 +54,7 @@ export class CarritoService {
     return carrito;
   }
 
-  async addItem(userId: number, productoId: number, cantidad: number) {
+  async addItem(userId: number | string, productoId: number, cantidad: number) {
     const carrito = await this.getOrCreateByUsuario(userId);
     const producto = await productoRepo.findOne({
       where: { idProducto: productoId },
@@ -81,7 +100,7 @@ export class CarritoService {
     return await this.getOrCreateByUsuario(userId);
   }
 
-  async updateItem(userId: number, itemId: number, cantidad: number) {
+  async updateItem(userId: number | string, itemId: number, cantidad: number) {
     const carrito = await this.getOrCreateByUsuario(userId);
     const detalle = await detalleCarritoRepo.findOne({
       where: {
@@ -108,7 +127,7 @@ export class CarritoService {
     return await this.getOrCreateByUsuario(userId);
   }
 
-  async removeItem(userId: number, itemId: number) {
+  async removeItem(userId: number | string, itemId: number) {
     const carrito = await this.getOrCreateByUsuario(userId);
     const detalle = await detalleCarritoRepo.findOne({
       where: {
@@ -125,7 +144,7 @@ export class CarritoService {
     await this.recalcularTotal(carrito.idCarrito);
   }
 
-  async clearCarrito(userId: number) {
+  async clearCarrito(userId: number | string) {
     const carrito = await this.getOrCreateByUsuario(userId);
     await detalleCarritoRepo.delete({ carrito: { idCarrito: carrito.idCarrito } });
     carrito.total = 0;
@@ -150,15 +169,15 @@ export class CarritoService {
   }
 
   async getById(id: number) {
-    const carrito = await carritoRepo.findOne({ 
-      where: { idCarrito: id }, 
-      relations: ["usuario", "detalles", "detalles.producto"] 
+    const carrito = await carritoRepo.findOne({
+      where: { idCarrito: id },
+      relations: ["usuario", "detalles", "detalles.producto"]
     });
-    
+
     if (!carrito) {
       throw new Error("Carrito no encontrado");
     }
-    
+
     return carrito;
   }
 
@@ -169,22 +188,22 @@ export class CarritoService {
 
   async update(id: number, data: Partial<CarritoCompra>) {
     const carrito = await carritoRepo.findOneBy({ idCarrito: id });
-    
+
     if (!carrito) {
       throw new Error("Carrito no encontrado");
     }
-    
+
     carritoRepo.merge(carrito, data);
     return await carritoRepo.save(carrito);
   }
 
   async delete(id: number) {
     const result = await carritoRepo.delete(id);
-    
+
     if (result.affected === 0) {
       throw new Error("Carrito no encontrado");
     }
-    
+
     return result;
   }
 }

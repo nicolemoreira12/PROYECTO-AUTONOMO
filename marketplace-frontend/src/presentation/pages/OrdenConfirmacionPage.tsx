@@ -3,6 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { paymentUseCases } from '@application/use-cases';
 import './OrdenConfirmacionPage.css';
 
+// Helper para formatear números de forma segura (la API puede devolver strings)
+const formatPrice = (value: number | string | undefined): string => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return (num ?? 0).toFixed(2);
+};
+
 interface DetalleOrden {
     idOrden: number;
     fechaOrden: string;
@@ -33,6 +39,20 @@ export const OrdenConfirmacionPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Verificar si hay token antes de cargar
+        const token = localStorage.getItem('token');
+        console.log('🔍 OrdenConfirmacion - Token disponible:', !!token);
+        console.log('🔍 OrdenConfirmacion - OrdenId:', ordenId);
+
+        if (!token) {
+            console.warn('⚠️ No hay token, esperando...');
+            // Dar tiempo para que el token se guarde después del login
+            const timeout = setTimeout(() => {
+                cargarOrden();
+            }, 500);
+            return () => clearTimeout(timeout);
+        }
+
         cargarOrden();
     }, [ordenId]);
 
@@ -43,12 +63,28 @@ export const OrdenConfirmacionPage: React.FC = () => {
             return;
         }
 
+        // Verificar token justo antes de la petición
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('❌ No hay token para cargar la orden');
+            setError('Sesión no disponible. Por favor, inicia sesión nuevamente.');
+            setLoading(false);
+            return;
+        }
+
         try {
+            console.log('📦 Cargando orden:', ordenId);
             const data = await paymentUseCases.obtenerDetalleOrden(parseInt(ordenId));
+            console.log('✅ Orden cargada:', data);
             setOrden(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al cargar orden:', error);
-            setError('No se pudo cargar la información de la orden');
+            // No hacer nada especial si es error de autenticación, solo mostrar mensaje
+            if (error.status === 401 || error.status === 403) {
+                setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+            } else {
+                setError('No se pudo cargar la información de la orden');
+            }
         } finally {
             setLoading(false);
         }
@@ -165,7 +201,7 @@ export const OrdenConfirmacionPage: React.FC = () => {
                             </div>
                             <div className="detail-row">
                                 <span>Total:</span>
-                                <strong className="total">${orden.total.toFixed(2)} USD</strong>
+                                <strong className="total">${formatPrice(orden.total)} USD</strong>
                             </div>
                             <div className="detail-row">
                                 <span>Método de Pago:</span>
@@ -228,17 +264,17 @@ export const OrdenConfirmacionPage: React.FC = () => {
                                 <div className="producto-info">
                                     <h4>{detalle.producto.nombreProducto}</h4>
                                     <p>Cantidad: {detalle.cantidad}</p>
-                                    <p>Precio unitario: ${detalle.precioUnitario.toFixed(2)}</p>
+                                    <p>Precio unitario: ${formatPrice(detalle.precioUnitario)}</p>
                                 </div>
                                 <div className="producto-subtotal">
-                                    ${detalle.subtotal.toFixed(2)}
+                                    ${formatPrice(detalle.subtotal)}
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="productos-total">
                         <span>Total:</span>
-                        <strong>${orden.total.toFixed(2)} USD</strong>
+                        <strong>${formatPrice(orden.total)} USD</strong>
                     </div>
                 </div>
 
