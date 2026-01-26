@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "dotenv/config";
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import http, { ClientRequest } from 'http';
 import { Socket } from 'net';
 import { WebSocketServer } from "ws";
@@ -31,16 +32,11 @@ const app = express();
 app.use(express.json());
 
 // CORS - Permitir solicitudes desde el frontend
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(cors({
+  origin: '*', // O especifica el origen de tu frontend, ej: 'http://localhost:5173'
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Ruta de prueba raíz
 app.get("/", (_req, res) => {

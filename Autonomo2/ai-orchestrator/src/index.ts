@@ -14,7 +14,7 @@ import { MessageType } from './types';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 6001;
+const PORT = process.env.PORT || 6000;
 
 // Crear servidor HTTP para Socket.io
 const httpServer = createServer(app);

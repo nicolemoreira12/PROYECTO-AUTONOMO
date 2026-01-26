@@ -6,14 +6,13 @@ const productoService = new ProductoService();
 // Crear producto
 export const crearProducto = async (req: Request, res: Response) => {
   try {
-    const imagen = req.body.imagenUrl || req.body.imagenURL;
     // Mapear campos del frontend al backend
     const productoData = {
       nombreProducto: req.body.nombre || req.body.nombreProducto,
       descripcion: req.body.descripcion,
       precio: parseFloat(req.body.precio),
       stock: parseInt(req.body.stock),
-      imagenURL: (imagen && imagen.trim()) || '/images/default-product.jpg',
+      imagenURL: req.body.imagenUrl || req.body.imagenURL || '/images/default-product.jpg',
       emprendedor: req.body.emprendedorId ? { idEmprendedor: req.body.emprendedorId } : undefined,
       categoria: req.body.categoriaId ? { idCategoria: req.body.categoriaId } : undefined
     };
@@ -51,19 +50,7 @@ export const obtenerProducto = async (req: Request, res: Response) => {
 // Actualizar
 export const actualizarProducto = async (req: Request, res: Response) => {
   try {
-    const dataToUpdate = { ...req.body };
-    const imagen = dataToUpdate.imagenUrl || dataToUpdate.imagenURL;
-
-    // Si el campo de imagen está presente en la solicitud, actualízalo.
-    // Esto incluye el caso en que se envía una cadena vacía para usar la imagen por defecto.
-    if (imagen !== undefined) {
-      dataToUpdate.imagenURL = (imagen && imagen.trim()) || '/images/default-product.jpg';
-    }
-    
-    // Limpiar las propiedades originales para evitar conflictos
-    delete dataToUpdate.imagenUrl;
-
-    const producto = await productoService.update(parseInt(req.params.id), dataToUpdate);
+    const producto = await productoService.update(parseInt(req.params.id), req.body);
     res.json(producto);
   } catch (error) {
     res.status(400).json({ message: error instanceof Error ? error.message : "Error al actualizar producto" });
